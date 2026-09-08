@@ -1,0 +1,186 @@
+{
+  "id": "A03",
+  "slug": "quality-attribute-scenarios",
+  "name": "Escenarios de Atributos de Calidad (ASR / QAW)",
+  "kind": "scenarios",
+  "scale": "scenario",
+  "is_gate": false,
+  "weight": 0.20,
+  "original_dimension": "Artefacto 2 — Escalabilidad (y demás atributos medibles)",
+  "source": "kb/references/v1/architectural-design-workflow.md (Fase 1, paso 2: QAW y SLOs)",
+  "purpose": "Traducir las necesidades de negocio de una plataforma de gestión de portafolios en escenarios de calidad medibles (estímulo, entorno, respuesta y medida) y verificar, con datos de pruebas de carga y producción, si la solución los cumple.",
+  "application": "Cada escenario define una medida objetivo (SLO). El equipo evaluador registra la medida observada en pruebas (K6/JMeter) o en producción. El sistema compara medido vs objetivo: cumple (1.0) o crédito parcial proporcional a la distancia (máximo 0.9).",
+  "criteria": [
+    {
+      "id": "QAS-01",
+      "name": "Consulta de portafolio con 50% más usuarios concurrentes",
+      "description": "Con un crecimiento del 50% en usuarios concurrentes (de 3.000 a 4.500) la consulta de posición valorada del portafolio debe responder en p95 ≤ 2.000 ms.",
+      "scenario": {
+        "source": "Asesores e inversionistas vía web y móvil",
+        "stimulus": "4.500 usuarios concurrentes consultan la posición valorada de su portafolio",
+        "environment": "Horario de mercado, operación normal",
+        "response": "El sistema entrega la posición valorada completa",
+        "response_measure": "Latencia p95 ≤ 2.000 ms y tasa de error < 0,5%"
+      },
+      "measure": {"metric": "latencia_p95", "unit": "ms", "target": 2000, "comparator": "<="},
+      "quality_attributes": ["rendimiento", "escalabilidad"],
+      "criticality": "alta",
+      "theme": "rendimiento y escalabilidad",
+      "recommendation": "Introducir vista materializada de posiciones (CQRS) alimentada por eventos de valoración y ampliar la caché de precios, en lugar de calcular la valoración en línea por cada consulta.",
+      "effort": "alto",
+      "kb_refs": ["kb/decisions/v1/004-caching-strategy.md", "kb/limits/v1/001-cascading-failures.md"]
+    },
+    {
+      "id": "QAS-02",
+      "name": "Valoración de fin de día de 250.000 portafolios",
+      "description": "El proceso batch de valoración al cierre de mercado debe completar 250.000 portafolios en ≤ 30 minutos para publicar extractos y cumplir la ventana regulatoria.",
+      "scenario": {
+        "source": "Cierre de mercado (evento programado)",
+        "stimulus": "Se dispara la valoración de 250.000 portafolios con precios de cierre",
+        "environment": "Fin de día, con carga de consultas residual",
+        "response": "Todos los portafolios quedan valorados y publicados",
+        "response_measure": "Duración total ≤ 30 minutos"
+      },
+      "measure": {"metric": "duracion_batch", "unit": "min", "target": 30, "comparator": "<="},
+      "quality_attributes": ["escalabilidad", "rendimiento"],
+      "criticality": "alta",
+      "theme": "rendimiento y escalabilidad",
+      "recommendation": "Particionar la valoración por segmento de portafolio y paralelizar consumidores con control de lag; evaluar Serverless o Jobs efímeros con límites de recursos.",
+      "effort": "alto",
+      "kb_refs": ["kb/decisions/v1/008-deployment-architecture-choice.md", "kb/limits/v1/008-missing-backpressure.md"]
+    },
+    {
+      "id": "QAS-03",
+      "name": "Disponibilidad en horario de mercado",
+      "description": "La plataforma debe estar disponible el 99,9% del tiempo en horario de mercado, medido mensualmente.",
+      "scenario": {
+        "source": "Fallos de infraestructura o despliegues",
+        "stimulus": "Cualquier incidente durante horario de mercado",
+        "environment": "Producción, horario de mercado",
+        "response": "El servicio continúa operando o se recupera",
+        "response_measure": "Disponibilidad mensual ≥ 99,9%"
+      },
+      "measure": {"metric": "disponibilidad_mensual", "unit": "%", "target": 99.9, "comparator": ">="},
+      "quality_attributes": ["disponibilidad", "resiliencia"],
+      "criticality": "alta",
+      "theme": "resiliencia",
+      "recommendation": "Eliminar los puntos únicos de falla identificados (broker en una zona, batch acoplado a la API) y adoptar despliegues progresivos (canary) con rollback automático.",
+      "effort": "medio",
+      "kb_refs": ["kb/limits/v1/001-cascading-failures.md"]
+    },
+    {
+      "id": "QAS-04",
+      "name": "Ingesta sostenida de precios de mercado",
+      "description": "El sistema debe ingerir 20.000 ticks de precio por segundo de forma sostenida durante 10 minutos sin crecimiento del lag de consumo.",
+      "scenario": {
+        "source": "Proveedor de datos de mercado",
+        "stimulus": "Ráfaga sostenida de 20.000 ticks/s",
+        "environment": "Apertura de mercado",
+        "response": "Los precios se procesan y publican sin acumular retraso",
+        "response_measure": "Throughput sostenido ≥ 20.000 ticks/s con lag estable"
+      },
+      "measure": {"metric": "throughput_sostenido", "unit": "ticks/s", "target": 20000, "comparator": ">="},
+      "quality_attributes": ["escalabilidad", "rendimiento"],
+      "criticality": "media",
+      "theme": "rendimiento y escalabilidad",
+      "recommendation": "Aumentar particiones del tópico de precios, escalar consumidores con autoscaling por lag y aplicar backpressure en el adaptador de ingesta.",
+      "effort": "medio",
+      "kb_refs": ["kb/limits/v1/008-missing-backpressure.md", "kb/decisions/v1/001-asynchronous-communication.md"]
+    },
+    {
+      "id": "QAS-05",
+      "name": "Degradación controlada ante caída del proveedor de precios",
+      "description": "Si el proveedor de precios deja de responder, el sistema debe seguir sirviendo consultas con el último precio conocido marcado como 'diferido', abriendo el circuito en ≤ 5 segundos y sin errores 5xx al cliente.",
+      "scenario": {
+        "source": "Proveedor externo de datos de mercado",
+        "stimulus": "El proveedor deja de responder o responde con latencia > 10 s",
+        "environment": "Horario de mercado",
+        "response": "Circuit breaker abierto, fallback a último precio conocido con indicador de precio diferido",
+        "response_measure": "Tiempo hasta degradación controlada ≤ 5 s; 0 errores 5xx al cliente"
+      },
+      "measure": {"metric": "tiempo_hasta_degradacion", "unit": "s", "target": 5, "comparator": "<="},
+      "quality_attributes": ["resiliencia", "disponibilidad"],
+      "criticality": "alta",
+      "theme": "resiliencia",
+      "recommendation": "Implementar Circuit Breaker con timeout explícito y fallback de último precio conocido en el adaptador de datos de mercado (Resilience4j), con prueba de caos que valide el escenario.",
+      "effort": "medio",
+      "kb_refs": ["kb/limits/v1/001-cascading-failures.md", "kb/limits/v1/010-retry-storms.md"]
+    },
+    {
+      "id": "QAS-06",
+      "name": "Autorización completa sobre datos de portafolio",
+      "description": "El 100% de los endpoints que exponen datos de portafolio o de cliente aplican autenticación fuerte y autorización por rol/propiedad.",
+      "scenario": {
+        "source": "Usuario autenticado o servicio interno",
+        "stimulus": "Solicitud a un endpoint que expone datos de portafolio o cliente",
+        "environment": "Producción",
+        "response": "Se valida identidad (MFA para canales) y autorización por rol y propiedad del recurso",
+        "response_measure": "100% de endpoints con autorización verificada en pruebas de seguridad"
+      },
+      "measure": {"metric": "endpoints_con_autorizacion", "unit": "%", "target": 100, "comparator": ">="},
+      "quality_attributes": ["seguridad"],
+      "criticality": "alta",
+      "theme": "seguridad de aplicación",
+      "recommendation": "Cerrar los endpoints internos sin autorización, centralizar la política de autorización (OPA o filtro común) y añadir pruebas DAST de autorización al pipeline.",
+      "effort": "medio",
+      "kb_refs": ["kb/limits/v1/007-missing-mtls-identity.md", "kb/references/v1/architecture-definition-of-done.md"]
+    },
+    {
+      "id": "QAS-07",
+      "name": "Recuperación ante desastre (RPO/RTO)",
+      "description": "Ante la pérdida de la región primaria, la plataforma debe recuperarse con RTO ≤ 30 minutos y RPO ≤ 5 minutos.",
+      "scenario": {
+        "source": "Falla regional del proveedor de nube",
+        "stimulus": "Pérdida completa de la región primaria",
+        "environment": "Producción",
+        "response": "Conmutación a región secundaria con datos consistentes",
+        "response_measure": "RTO ≤ 30 min; RPO ≤ 5 min"
+      },
+      "measure": {"metric": "rto", "unit": "min", "target": 30, "comparator": "<="},
+      "quality_attributes": ["disponibilidad", "continuidad"],
+      "criticality": "media",
+      "theme": "continuidad del negocio",
+      "recommendation": "Pasar de snapshots horarios a replicación continua (réplica de lectura cross-region) y automatizar el runbook de conmutación con ejercicio semestral.",
+      "effort": "alto",
+      "kb_refs": ["kb/references/v1/architectural-design-workflow.md"]
+    },
+    {
+      "id": "QAS-08",
+      "name": "Modificabilidad: incorporar un nuevo tipo de activo",
+      "description": "Incorporar un nuevo tipo de instrumento (ETF internacional) con su valoración y reglas debe tomar ≤ 10 días-persona y tocar máximo 2 servicios.",
+      "scenario": {
+        "source": "Negocio (producto)",
+        "stimulus": "Solicitud de soportar un nuevo tipo de instrumento",
+        "environment": "Desarrollo",
+        "response": "El instrumento queda operativo en valoración, órdenes y reportes",
+        "response_measure": "≤ 10 días-persona y ≤ 2 servicios modificados"
+      },
+      "measure": {"metric": "dias_persona", "unit": "días-persona", "target": 10, "comparator": "<="},
+      "quality_attributes": ["mantenibilidad", "evolutividad"],
+      "criticality": "media",
+      "theme": "diseño evolutivo",
+      "recommendation": "Modelar 'Instrumento' como agregado con estrategia de valoración por tipo (patrón Strategy + Factory) y externalizar reglas por instrumento a configuración versionada.",
+      "effort": "alto",
+      "kb_refs": ["kb/perspective.md", "kb/business-solutions/clients/ficohsa/references/v1/architecture-guidelines-scenarios.md"]
+    },
+    {
+      "id": "QAS-09",
+      "name": "Auditabilidad de órdenes",
+      "description": "El 100% de las órdenes debe tener una traza inmutable reconstruible (quién, qué, cuándo, con qué precio) en ≤ 1 minuto para atender requerimientos del regulador.",
+      "scenario": {
+        "source": "Regulador o auditoría interna",
+        "stimulus": "Solicitud de reconstrucción del ciclo de vida de una orden",
+        "environment": "Producción",
+        "response": "Se entrega la traza completa e inmutable de la orden",
+        "response_measure": "100% de órdenes reconstruibles en ≤ 1 min"
+      },
+      "measure": {"metric": "ordenes_reconstruibles", "unit": "%", "target": 100, "comparator": ">="},
+      "quality_attributes": ["seguridad", "cumplimiento"],
+      "criticality": "alta",
+      "theme": "seguridad de aplicación",
+      "recommendation": "Mantener el event store de órdenes como fuente de auditoría y añadir verificación periódica de integridad (hash encadenado).",
+      "effort": "bajo",
+      "kb_refs": ["kb/decisions/v1/001-asynchronous-communication.md"]
+    }
+  ]
+}

@@ -1,0 +1,2275 @@
+{
+  "solution": {
+    "id": "investcore-portfolio",
+    "name": "InvestCore — Plataforma de Gestión de Portafolio de Inversiones",
+    "client": "Fiduciaria Andina (caso de estudio)",
+    "version": "2026.08 (release 14)"
+  },
+  "generated_at": "2026-09-08T15:03 -05",
+  "overall_score": 48.1,
+  "maturity_level": "Nivel 2 - Gestionado",
+  "verdict": "NO APTO para nuevas liberaciones críticas sin plan de remediación",
+  "verdict_reason": "8 hallazgo(s) críticos y 6 bloqueante(s) violan límites innegociables del Chapter.",
+  "heatmap": {
+    "alineación con negocio": 62.5,
+    "confiabilidad": 50.0,
+    "continuidad": 66.7,
+    "cumplimiento": 37.5,
+    "disponibilidad": 37.5,
+    "escalabilidad": 47.4,
+    "evolutividad": 26.4,
+    "finops": 41.7,
+    "gobierno": 40.0,
+    "interoperabilidad": 70.0,
+    "mantenibilidad": 45.0,
+    "observabilidad": 50.0,
+    "operabilidad": 33.3,
+    "portabilidad": 50.0,
+    "rendimiento": 71.1,
+    "resiliencia": 35.1,
+    "seguridad": 39.0
+  },
+  "artifacts": [
+    {
+      "id": "A01",
+      "name": "Rúbrica de Perspectiva y Valores de Ingeniería",
+      "kind": "rubric",
+      "weight": 0.15,
+      "score": 53.1,
+      "gate_passed": null,
+      "counts": {
+        "Parcial": 8
+      },
+      "criteria": [
+        {
+          "id": "VAL-01",
+          "name": "Evolutividad y agilidad arquitectónica",
+          "score": 0.5,
+          "label": "Parcial",
+          "detail": "Nivel 2/4 — Existen algunos puntos de extensión pero el cambio típico cruza más de dos servicios.",
+          "evidence": "La última incorporación de un instrumento (nota estructurada) tocó 4 servicios y tomó 18 días-persona; existe abstracción 'Instrument' pero la valoración por tipo está codificada con condicionales en valuation-service.",
+          "source": "Historial de PRs Q2-2026; entrevista con líder técnico",
+          "quality_attributes": [
+            "mantenibilidad",
+            "evolutividad"
+          ]
+        },
+        {
+          "id": "VAL-02",
+          "name": "Desacoplamiento y alta cohesión (Bounded Contexts)",
+          "score": 0.25,
+          "label": "Parcial",
+          "detail": "Nivel 1/4 — Servicios separados pero con acoplamiento por base de datos y llamadas cruzadas.",
+          "evidence": "Los contextos están separados en servicios, pero reporting-service lee directamente las tablas de portfolio-service y risk-compliance consulta customer-service de forma síncrona en cada evaluación.",
+          "source": "Diagrama de despliegue; revisión de repositorios (datasource compartido en reporting-service/application.yml)",
+          "quality_attributes": [
+            "mantenibilidad",
+            "escalabilidad"
+          ]
+        },
+        {
+          "id": "VAL-03",
+          "name": "Simplicidad esencial",
+          "score": 0.75,
+          "label": "Parcial",
+          "detail": "Nivel 3/4 — Cada componente tiene una razón de negocio documentada.",
+          "evidence": "Inventario de componentes justificado; se detectó un servicio 'notification-orchestrator' sin uso desde 2025 que ya está marcado para retiro.",
+          "source": "SAD sección 4; backlog INV-1187",
+          "quality_attributes": [
+            "mantenibilidad"
+          ]
+        },
+        {
+          "id": "VAL-04",
+          "name": "Independencia tecnológica (Clean / Hexagonal)",
+          "score": 0.5,
+          "label": "Parcial",
+          "detail": "Nivel 2/4 — La mayoría de servicios aplica puertos y adaptadores; hay excepciones.",
+          "evidence": "5 de 7 servicios siguen el arquetipo hexagonal del Chapter; reporting-service y legacy-acl mezclan lógica de negocio en controladores y repositorios JPA.",
+          "source": "Revisión estática de estructura de paquetes",
+          "quality_attributes": [
+            "mantenibilidad",
+            "portabilidad"
+          ]
+        },
+        {
+          "id": "VAL-05",
+          "name": "Observabilidad y medibilidad (SLIs / SLOs)",
+          "score": 0.5,
+          "label": "Parcial",
+          "detail": "Nivel 2/4 — Métricas técnicas con algunos objetivos informales.",
+          "evidence": "Existen métricas RED en Grafana y un objetivo informal de p95 < 2 s; no hay SLOs formales ni presupuesto de error por capacidad de negocio.",
+          "source": "Tableros Grafana 'investcore-services'; entrevista SRE",
+          "quality_attributes": [
+            "observabilidad",
+            "operabilidad"
+          ]
+        },
+        {
+          "id": "VAL-06",
+          "name": "El dominio dicta las reglas (DDD y lenguaje ubicuo)",
+          "score": 0.75,
+          "label": "Parcial",
+          "detail": "Nivel 3/4 — Lenguaje ubicuo documentado y reflejado en código, eventos y APIs.",
+          "evidence": "Glosario ubicuo publicado (Portafolio, Posición, Orden, Ejecución, Valoración, Instrumento); los eventos Kafka y las APIs usan esos términos. Falta cubrir el contexto de cumplimiento.",
+          "source": "docs/glosario.md; esquemas de eventos",
+          "quality_attributes": [
+            "mantenibilidad",
+            "alineación con negocio"
+          ]
+        },
+        {
+          "id": "VAL-07",
+          "name": "Decisiones formales con trade-offs explícitos (ADRs y SAD)",
+          "score": 0.5,
+          "label": "Parcial",
+          "detail": "Nivel 2/4 — ADRs para algunas decisiones; sin trade-offs explícitos.",
+          "evidence": "Existen 5 ADRs locales con plantilla propia (sin sección de trade-offs económicos); decisiones como la ausencia de mesh o el esquema compartido no tienen ADR aprobado. El SAD está desactualizado (v2025.11).",
+          "source": "Repositorio investcore-docs/adr",
+          "quality_attributes": [
+            "gobierno",
+            "mantenibilidad"
+          ]
+        },
+        {
+          "id": "VAL-08",
+          "name": "Gestión activa y visible de la deuda técnica",
+          "score": 0.5,
+          "label": "Parcial",
+          "detail": "Nivel 2/4 — Deuda documentada fuera del backlog, sin priorización ni capacidad asignada.",
+          "evidence": "La deuda técnica está inventariada en una página de Confluence (23 ítems) sin estimación de impacto ni capacidad reservada; no se miden métricas DORA completas.",
+          "source": "Confluence 'Deuda técnica InvestCore'; Jira",
+          "quality_attributes": [
+            "mantenibilidad",
+            "gobierno"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "A02",
+      "name": "Checklist del Flujo de Diseño Arquitectónico",
+      "kind": "checklist",
+      "weight": 0.1,
+      "score": 41.7,
+      "gate_passed": null,
+      "counts": {
+        "Parcial": 5,
+        "No cumple": 1
+      },
+      "criteria": [
+        {
+          "id": "WF-01",
+          "name": "Capacidades de negocio y lenguaje ubicuo documentados",
+          "score": 0.5,
+          "label": "Parcial",
+          "detail": "Estado declarado: partial",
+          "evidence": "Se realizó Event Storming en 2024 para portafolio, órdenes y valoración; los contextos de riesgo/cumplimiento y cliente se modelaron sin taller y sin mapa de capacidades actualizado.",
+          "source": "Miro 'Event Storming InvestCore 2024'; SAD sección 2",
+          "quality_attributes": [
+            "alineación con negocio",
+            "mantenibilidad"
+          ]
+        },
+        {
+          "id": "WF-02",
+          "name": "Atributos de calidad (ASRs) con métricas y SLOs",
+          "score": 0.5,
+          "label": "Parcial",
+          "detail": "Estado declarado: partial",
+          "evidence": "Los requisitos no funcionales existen como lista textual ('alta disponibilidad', 'respuesta rápida') sin escenarios estímulo-respuesta ni SLOs formales; los escenarios de este assessment se construyeron durante la evaluación.",
+          "source": "SAD sección 3 'Requisitos no funcionales'",
+          "quality_attributes": [
+            "rendimiento",
+            "escalabilidad",
+            "disponibilidad"
+          ]
+        },
+        {
+          "id": "WF-03",
+          "name": "ADRs explícitos para las decisiones clave",
+          "score": 0.5,
+          "label": "Parcial",
+          "detail": "Estado declarado: partial",
+          "evidence": "Hay ADRs para estilo (microservicios), eventos (Kafka), caché y despliegue del batch; no hay ADR para persistencia por servicio, seguridad interna ni observabilidad.",
+          "source": "investcore-docs/adr",
+          "quality_attributes": [
+            "gobierno"
+          ]
+        },
+        {
+          "id": "WF-04",
+          "name": "Vistas C4 estandarizadas y contratos API-First",
+          "score": 0.5,
+          "label": "Parcial",
+          "detail": "Estado declarado: partial",
+          "evidence": "Vistas C4 L1 y L2 existentes; sin vista de componentes para valuation-service y order-service. Contratos OpenAPI definidos antes de implementar; los eventos Kafka no tienen contrato formal.",
+          "source": "SAD secciones 5-6; catálogo de APIs",
+          "quality_attributes": [
+            "mantenibilidad",
+            "interoperabilidad"
+          ]
+        },
+        {
+          "id": "WF-05",
+          "name": "Diseño de infraestructura y DevSecOps (IaC, topología, quality gates)",
+          "score": 0.5,
+          "label": "Parcial",
+          "detail": "Estado declarado: partial",
+          "evidence": "IaC con Terraform para EKS, RDS y MSK; Redis y reglas de WAF configurados manualmente. El pipeline ejecuta SonarQube pero el quality gate no bloquea el despliegue.",
+          "source": "Repositorio investcore-infra; definición del pipeline GitLab CI",
+          "quality_attributes": [
+            "seguridad",
+            "operabilidad"
+          ]
+        },
+        {
+          "id": "WF-06",
+          "name": "Verificación continua: fitness functions y deuda en el backlog",
+          "score": 0.0,
+          "label": "No cumple",
+          "detail": "Estado declarado: fail",
+          "evidence": "No existen fitness functions (sin ArchUnit ni reglas de dependencia automatizadas); la deuda no se gestiona en sprints.",
+          "source": "Búsqueda en repositorios (0 dependencias ArchUnit); entrevista con el equipo",
+          "quality_attributes": [
+            "mantenibilidad",
+            "evolutividad"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "A03",
+      "name": "Escenarios de Atributos de Calidad (ASR / QAW)",
+      "kind": "scenarios",
+      "weight": 0.2,
+      "score": 69.6,
+      "gate_passed": null,
+      "counts": {
+        "Parcial": 8,
+        "Cumple": 1
+      },
+      "criteria": [
+        {
+          "id": "QAS-01",
+          "name": "Consulta de portafolio con 50% más usuarios concurrentes",
+          "score": 0.7547169811320755,
+          "label": "Parcial",
+          "detail": "Medido: 2650 ms · Objetivo: <= 2000 ms",
+          "evidence": "Prueba K6 con 4.500 VUs: p95 = 2.650 ms y 0,8% de errores; la valoración se calcula en línea llamando a pricing-service por cada posición.",
+          "source": "Reporte K6 2026-08-12 'consulta-portafolio-4500vu'",
+          "quality_attributes": [
+            "rendimiento",
+            "escalabilidad"
+          ]
+        },
+        {
+          "id": "QAS-02",
+          "name": "Valoración de fin de día de 250.000 portafolios",
+          "score": 0.7317073170731707,
+          "label": "Parcial",
+          "detail": "Medido: 41 min · Objetivo: <= 30 min",
+          "evidence": "La valoración de fin de día tomó 41 minutos en promedio en agosto (máximo 53 min el 29/08), con un solo consumidor por partición y 6 particiones.",
+          "source": "Métricas del job valuation-batch (CloudWatch) agosto 2026",
+          "quality_attributes": [
+            "escalabilidad",
+            "rendimiento"
+          ]
+        },
+        {
+          "id": "QAS-03",
+          "name": "Disponibilidad en horario de mercado",
+          "score": 0.9,
+          "label": "Parcial",
+          "detail": "Medido: 99.87 % · Objetivo: >= 99.9 %",
+          "evidence": "Disponibilidad de 99,87% en los últimos 3 meses; dos incidentes mayores: caída del proveedor de precios (90 min degradados) y OOM del batch que afectó a la API de valoración.",
+          "source": "Reporte mensual de disponibilidad; postmortems INC-2026-071 e INC-2026-088",
+          "quality_attributes": [
+            "disponibilidad",
+            "resiliencia"
+          ]
+        },
+        {
+          "id": "QAS-04",
+          "name": "Ingesta sostenida de precios de mercado",
+          "score": 0.7,
+          "label": "Parcial",
+          "detail": "Medido: 14000 ticks/s · Objetivo: >= 20000 ticks/s",
+          "evidence": "En la prueba de ingesta el lag del tópico 'market.prices' crece a partir de 14.000 ticks/s; el consumidor no aplica backpressure y los reintentos del adaptador de ingesta son inmediatos.",
+          "source": "Prueba de carga de pricing-service 2026-08-14; métricas de lag MSK",
+          "quality_attributes": [
+            "escalabilidad",
+            "rendimiento"
+          ]
+        },
+        {
+          "id": "QAS-05",
+          "name": "Degradación controlada ante caída del proveedor de precios",
+          "score": 0.05555555555555555,
+          "label": "Parcial",
+          "detail": "Medido: 90 s · Objetivo: <= 5 s",
+          "evidence": "Durante INC-2026-071 el proveedor de precios respondió con latencia > 30 s; pricing-service no tiene timeout ni circuit breaker y los clientes recibieron 504 durante 90 s hasta la intervención manual (solo el BFF tiene Resilience4j).",
+          "source": "Postmortem INC-2026-071; código pricing-service/MarketDataClient.java",
+          "quality_attributes": [
+            "resiliencia",
+            "disponibilidad"
+          ]
+        },
+        {
+          "id": "QAS-06",
+          "name": "Autorización completa sobre datos de portafolio",
+          "score": 0.9,
+          "label": "Parcial",
+          "detail": "Medido: 96 % · Objetivo: >= 100 %",
+          "evidence": "48 de 50 endpoints que exponen datos de portafolio o cliente aplican autorización; 2 endpoints internos de reporting-service (/internal/positions, /internal/statements) solo validan red y no identidad.",
+          "source": "Prueba de seguridad DAST 2026-07 (OWASP ZAP) y revisión de filtros de seguridad",
+          "quality_attributes": [
+            "seguridad"
+          ]
+        },
+        {
+          "id": "QAS-07",
+          "name": "Recuperación ante desastre (RPO/RTO)",
+          "score": 0.6666666666666666,
+          "label": "Parcial",
+          "detail": "Medido: 45 min · Objetivo: <= 30 min",
+          "evidence": "Snapshots de RDS cada hora (RPO efectivo 60 min) y runbook manual de conmutación ejecutado en 45 min en el ejercicio de DR de junio 2026.",
+          "source": "Ejercicio DR 2026-06-21; plan de continuidad",
+          "quality_attributes": [
+            "disponibilidad",
+            "continuidad"
+          ]
+        },
+        {
+          "id": "QAS-08",
+          "name": "Modificabilidad: incorporar un nuevo tipo de activo",
+          "score": 0.5555555555555556,
+          "label": "Parcial",
+          "detail": "Medido: 18 días-persona · Objetivo: <= 10 días-persona",
+          "evidence": "La incorporación de notas estructuradas tomó 18 días-persona y modificó 4 servicios (valuation, portfolio, reporting, order).",
+          "source": "Épica INV-980; historial de PRs",
+          "quality_attributes": [
+            "mantenibilidad",
+            "evolutividad"
+          ]
+        },
+        {
+          "id": "QAS-09",
+          "name": "Auditabilidad de órdenes",
+          "score": 1.0,
+          "label": "Cumple",
+          "detail": "Medido: 100 % · Objetivo: >= 100 %",
+          "evidence": "order-service usa event sourcing; la reconstrucción de cualquier orden se obtiene en segundos desde el event store y se validó con 200 órdenes de muestra.",
+          "source": "Prueba de auditoría con cumplimiento 2026-08-05",
+          "quality_attributes": [
+            "seguridad",
+            "cumplimiento"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "A04",
+      "name": "Definition of Done de Arquitectura y Calidad",
+      "kind": "gate",
+      "weight": 0.15,
+      "score": 40.0,
+      "gate_passed": false,
+      "counts": {
+        "No cumple": 3,
+        "Parcial": 6,
+        "Cumple": 1
+      },
+      "criteria": [
+        {
+          "id": "DOD-01",
+          "name": "Validación continua (fitness functions)",
+          "score": 0.0,
+          "label": "No cumple",
+          "detail": "Estado declarado: fail",
+          "evidence": "Sin pruebas de arquitectura automatizadas; la regla de dependencias hexagonal se verifica solo en code review.",
+          "source": "Repositorios (sin ArchUnit); pipeline",
+          "quality_attributes": [
+            "mantenibilidad",
+            "evolutividad"
+          ]
+        },
+        {
+          "id": "DOD-02",
+          "name": "Cobertura mínima de pruebas del 80%",
+          "score": 0.5,
+          "label": "Parcial",
+          "detail": "Estado declarado: partial",
+          "evidence": "Cobertura global 62% (valuation-service 48%, order-service 81%, reporting-service 39%); el umbral no bloquea el pipeline.",
+          "source": "SonarQube 2026-08-30",
+          "quality_attributes": [
+            "mantenibilidad",
+            "confiabilidad"
+          ]
+        },
+        {
+          "id": "DOD-03",
+          "name": "Seguridad y gestión de secretos (DevSecOps)",
+          "score": 0.0,
+          "label": "No cumple",
+          "detail": "Estado declarado: fail",
+          "evidence": "API key del proveedor de datos de mercado y credenciales SMTP en application.yml versionado en pricing-service y reporting-service; el resto de secretos está en AWS Secrets Manager. No hay escaneo de secretos en el pipeline.",
+          "source": "Revisión de repositorios; historial git",
+          "quality_attributes": [
+            "seguridad"
+          ]
+        },
+        {
+          "id": "DOD-04",
+          "name": "Análisis estático (SAST) limpio",
+          "score": 0.5,
+          "label": "Parcial",
+          "detail": "Estado declarado: partial",
+          "evidence": "SonarQube reporta 3 vulnerabilidades altas abiertas (dependencias) y el gate no es bloqueante; no se escanean imágenes (Trivy) ni IaC (Checkov).",
+          "source": "SonarQube; pipeline GitLab CI",
+          "quality_attributes": [
+            "seguridad",
+            "mantenibilidad"
+          ]
+        },
+        {
+          "id": "DOD-05",
+          "name": "Métricas DORA y observabilidad de CI/CD",
+          "score": 0.5,
+          "label": "Parcial",
+          "detail": "Estado declarado: partial",
+          "evidence": "Se mide Deployment Frequency (3/semana) y Lead Time; MTTR y Change Failure Rate no se capturan.",
+          "source": "Tablero de ingeniería",
+          "quality_attributes": [
+            "operabilidad",
+            "gobierno"
+          ]
+        },
+        {
+          "id": "DOD-06",
+          "name": "Tolerancia a fallos y rendimiento",
+          "score": 0.5,
+          "label": "Parcial",
+          "detail": "Estado declarado: partial",
+          "evidence": "Circuit Breaker y timeouts solo en el BFF; los clientes hacia datos de mercado, custodio y core no tienen timeout explícito. Pruebas K6 existen pero se ejecutan manualmente.",
+          "source": "Código de clientes HTTP; pipeline",
+          "quality_attributes": [
+            "resiliencia",
+            "rendimiento"
+          ]
+        },
+        {
+          "id": "DOD-07",
+          "name": "Gestión transparente de la deuda técnica",
+          "score": 0.0,
+          "label": "No cumple",
+          "detail": "Estado declarado: fail",
+          "evidence": "La deuda se registra en Confluence, fuera del backlog, sin impacto económico ni interés.",
+          "source": "Confluence; Jira (0 ítems etiquetados como deuda técnica)",
+          "quality_attributes": [
+            "mantenibilidad",
+            "gobierno"
+          ]
+        },
+        {
+          "id": "DOD-08",
+          "name": "Trazabilidad de observabilidad",
+          "score": 0.5,
+          "label": "Parcial",
+          "detail": "Estado declarado: partial",
+          "evidence": "4 de 7 servicios emiten logs JSON con traceId; valuation-batch y reporting-service emiten texto plano; health checks presentes en todos.",
+          "source": "Muestras de logs CloudWatch; configuración logback",
+          "quality_attributes": [
+            "observabilidad"
+          ]
+        },
+        {
+          "id": "DOD-09",
+          "name": "Aprobación de code review y seguridad",
+          "score": 1.0,
+          "label": "Cumple",
+          "detail": "Estado declarado: pass",
+          "evidence": "Revisión obligatoria por par configurada en GitLab con al menos una aprobación; se usa asistente IA para revisión previa.",
+          "source": "Configuración de merge requests",
+          "quality_attributes": [
+            "mantenibilidad"
+          ]
+        },
+        {
+          "id": "DOD-10",
+          "name": "Contratos e interoperabilidad estricta",
+          "score": 0.5,
+          "label": "Parcial",
+          "detail": "Estado declarado: partial",
+          "evidence": "APIs versionadas (/v1) con pruebas de contrato Pact entre BFF y servicios; el Swagger publicado de reporting-service y customer-service no coincide con el código (drift detectado en 6 endpoints).",
+          "source": "Catálogo de APIs; comparación OpenAPI vs código",
+          "quality_attributes": [
+            "interoperabilidad",
+            "mantenibilidad"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "A05",
+      "name": "Catálogo de Límites y Anti-patrones",
+      "kind": "risk-catalog",
+      "weight": 0.15,
+      "score": 30.0,
+      "gate_passed": null,
+      "counts": {
+        "No cumple": 5,
+        "Cumple": 1,
+        "Parcial": 4
+      },
+      "criteria": [
+        {
+          "id": "LIM-001",
+          "name": "Fallos en cascada por timeouts y falta de Circuit Breaker",
+          "score": 0.0,
+          "label": "No cumple",
+          "detail": "Estado declarado: violated",
+          "evidence": "pricing-service invoca al proveedor de precios sin timeout ni circuit breaker; el incidente INC-2026-071 produjo 504 en cascada hacia portfolio-service y el BFF.",
+          "source": "Postmortem INC-2026-071; MarketDataClient.java",
+          "quality_attributes": [
+            "resiliencia",
+            "disponibilidad"
+          ]
+        },
+        {
+          "id": "LIM-002",
+          "name": "Monolito distribuido por base de datos compartida",
+          "score": 0.0,
+          "label": "No cumple",
+          "detail": "Estado declarado: violated",
+          "evidence": "reporting-service lee las tablas 'positions' y 'portfolios' del esquema de portfolio-service; una migración de columna en julio rompió la generación de extractos.",
+          "source": "application.yml de reporting-service; INC-2026-079",
+          "quality_attributes": [
+            "escalabilidad",
+            "mantenibilidad"
+          ]
+        },
+        {
+          "id": "LIM-003",
+          "name": "Monolito distribuido por contratos frágiles",
+          "score": 1.0,
+          "label": "Cumple",
+          "detail": "Estado declarado: compliant",
+          "evidence": "Pruebas de contrato Pact en CI; clientes aplican Tolerant Reader; sin breaking changes en los últimos 6 meses.",
+          "source": "Pact Broker; historial de versiones de API",
+          "quality_attributes": [
+            "interoperabilidad",
+            "mantenibilidad"
+          ]
+        },
+        {
+          "id": "LIM-004",
+          "name": "Hambre de recursos (Resource Exhaustion)",
+          "score": 0.5,
+          "label": "Parcial",
+          "detail": "Estado declarado: at-risk",
+          "evidence": "5 de 7 despliegues definen requests/limits; valuation-batch y legacy-acl no los definen y el batch fue OOMKilled el 29/08 afectando el nodo. No hay alertas de anomalía de costos.",
+          "source": "Manifiestos Helm; eventos de Kubernetes INC-2026-088",
+          "quality_attributes": [
+            "escalabilidad",
+            "finops"
+          ]
+        },
+        {
+          "id": "LIM-005",
+          "name": "Saturación de pools de conexión",
+          "score": 0.5,
+          "label": "Parcial",
+          "detail": "Estado declarado: at-risk",
+          "evidence": "HikariCP con tamaño por defecto (10) en valuation-service; en el cierre de mercado se observan esperas de conexión > 5 s y advertencias 'connection is not available'.",
+          "source": "Métricas Hikari en Grafana; logs valuation-service",
+          "quality_attributes": [
+            "rendimiento",
+            "disponibilidad"
+          ]
+        },
+        {
+          "id": "LIM-006",
+          "name": "Brechas de seguridad por secretos en código",
+          "score": 0.0,
+          "label": "No cumple",
+          "detail": "Estado declarado: violated",
+          "evidence": "API key del proveedor de datos de mercado y credenciales SMTP versionadas en application.yml; el historial del repositorio conserva una contraseña de base de datos rotada en 2025.",
+          "source": "Revisión de repositorios y de historial git",
+          "quality_attributes": [
+            "seguridad",
+            "cumplimiento"
+          ]
+        },
+        {
+          "id": "LIM-007",
+          "name": "Falta de validación de identidad (sin mTLS)",
+          "score": 0.5,
+          "label": "Parcial",
+          "detail": "Estado declarado: at-risk",
+          "evidence": "TLS termina en el ingress; el tráfico interno entre pods es HTTP plano. Existen NetworkPolicies por namespace pero no autenticación mutua ni identidad de servicio.",
+          "source": "Configuración de ingress y NetworkPolicies; entrevista con plataforma",
+          "quality_attributes": [
+            "seguridad"
+          ]
+        },
+        {
+          "id": "LIM-008",
+          "name": "Falta de backpressure",
+          "score": 0.0,
+          "label": "No cumple",
+          "detail": "Estado declarado: violated",
+          "evidence": "El consumidor de valoración procesa sin control de lag ni límite de concurrencia; en la apertura del 29/08 la cola creció hasta agotar memoria (OOM). No hay respuestas 429 en las APIs internas.",
+          "source": "Métricas de lag MSK; INC-2026-088",
+          "quality_attributes": [
+            "escalabilidad",
+            "resiliencia"
+          ]
+        },
+        {
+          "id": "LIM-009",
+          "name": "Logging insuficiente (ceguera operacional)",
+          "score": 0.5,
+          "label": "Parcial",
+          "detail": "Estado declarado: at-risk",
+          "evidence": "Logs centralizados en CloudWatch, pero valuation-batch y reporting-service emiten texto plano sin traceId, lo que impidió correlacionar el incidente INC-2026-088 en menos de 2 horas.",
+          "source": "Postmortem INC-2026-088; configuración de logging",
+          "quality_attributes": [
+            "observabilidad"
+          ]
+        },
+        {
+          "id": "LIM-010",
+          "name": "Reintentos sin control (Retry Storm)",
+          "score": 0.0,
+          "label": "No cumple",
+          "detail": "Estado declarado: violated",
+          "evidence": "El adaptador de ingesta de precios reintenta 3 veces de forma inmediata y sin backoff ante error del proveedor; durante INC-2026-071 el tráfico hacia el proveedor se triplicó.",
+          "source": "MarketDataIngestAdapter.java; métricas de egress durante el incidente",
+          "quality_attributes": [
+            "resiliencia",
+            "disponibilidad"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "A06",
+      "name": "Conformidad con las Decisiones del Chapter (ADRs)",
+      "kind": "conformance",
+      "weight": 0.1,
+      "score": 52.8,
+      "gate_passed": null,
+      "counts": {
+        "Cumple": 3,
+        "No cumple": 3,
+        "Parcial": 3
+      },
+      "criteria": [
+        {
+          "id": "ADR-001",
+          "name": "Comunicación asíncrona como patrón dominante",
+          "score": 1.0,
+          "label": "Cumple",
+          "detail": "Estado declarado: aligned",
+          "evidence": "Órdenes, ejecuciones, precios y valoraciones se integran por eventos Kafka; las llamadas síncronas se limitan a consultas que requieren respuesta inmediata.",
+          "source": "ADR-INV-03; topología de tópicos",
+          "quality_attributes": [
+            "resiliencia",
+            "escalabilidad"
+          ]
+        },
+        {
+          "id": "ADR-002",
+          "name": "Uso de bases NoSQL y Database-per-service",
+          "score": 0.0,
+          "label": "No cumple",
+          "detail": "Estado declarado: unjustified-deviation",
+          "evidence": "El esquema compartido entre portfolio-service y reporting-service contradice Database-per-service; el ADR-INV-09 que lo justifica como temporal está sin aprobar y sin fecha de salida.",
+          "source": "ADR-INV-09; configuración de datasources",
+          "quality_attributes": [
+            "escalabilidad",
+            "mantenibilidad"
+          ]
+        },
+        {
+          "id": "ADR-003",
+          "name": "Adopción de Service Mesh en ecosistemas críticos",
+          "score": 0.0,
+          "label": "No cumple",
+          "detail": "Estado declarado: unjustified-deviation",
+          "evidence": "Siete microservicios críticos financieros sin service mesh ni alternativa de mTLS; no existe ADR local que documente la decisión de no adoptarlo.",
+          "source": "Plataforma EKS; repositorio de ADRs",
+          "quality_attributes": [
+            "seguridad",
+            "operabilidad"
+          ]
+        },
+        {
+          "id": "ADR-004",
+          "name": "Estrategia de caché (Cache-aside / Write-through)",
+          "score": 1.0,
+          "label": "Cumple",
+          "detail": "Estado declarado: aligned",
+          "evidence": "Redis cache-aside para último precio con TTL 2 s, documentado en ADR-INV-05 con análisis de datos obsoletos.",
+          "source": "ADR-INV-05; pricing-service",
+          "quality_attributes": [
+            "rendimiento"
+          ]
+        },
+        {
+          "id": "ADR-005",
+          "name": "Estándar híbrido de protocolos (REST / gRPC / eventos)",
+          "score": 1.0,
+          "label": "Cumple",
+          "detail": "Estado declarado: aligned",
+          "evidence": "REST para BFF y APIs públicas, gRPC entre pricing-service y valuation-service, eventos para workflows.",
+          "source": "Catálogo de APIs; protos",
+          "quality_attributes": [
+            "interoperabilidad",
+            "rendimiento"
+          ]
+        },
+        {
+          "id": "ADR-006",
+          "name": "Persistencia políglota por Bounded Context",
+          "score": 0.5,
+          "label": "Parcial",
+          "detail": "Estado declarado: partial",
+          "evidence": "PostgreSQL para portafolio y órdenes, MongoDB para riesgo/cumplimiento y Redis para precios, alineado con la estrategia políglota; sin embargo el aislamiento por contexto se rompe en reporting-service.",
+          "source": "Diagrama de despliegue",
+          "quality_attributes": [
+            "escalabilidad",
+            "mantenibilidad"
+          ]
+        },
+        {
+          "id": "ADR-007",
+          "name": "Gobierno de secretos con Secret Manager / Vault",
+          "score": 0.0,
+          "label": "No cumple",
+          "detail": "Estado declarado: unjustified-deviation",
+          "evidence": "Uso mixto: la mayoría de secretos en Secrets Manager pero credenciales críticas en archivos versionados; sin rotación automática.",
+          "source": "Revisión de configuración",
+          "quality_attributes": [
+            "seguridad",
+            "cumplimiento"
+          ]
+        },
+        {
+          "id": "ADR-008",
+          "name": "Elección de arquitectura de despliegue (Kubernetes vs Serverless)",
+          "score": 0.75,
+          "label": "Parcial",
+          "detail": "Estado declarado: justified-deviation",
+          "evidence": "El batch de valoración (carga intermitente) corre en EKS y no en Serverless; el ADR-INV-07 justifica la desviación por duración > 15 min y warm-up de JVM, con trade-offs documentados.",
+          "source": "ADR-INV-07",
+          "quality_attributes": [
+            "finops",
+            "escalabilidad"
+          ]
+        },
+        {
+          "id": "ADR-009",
+          "name": "Observabilidad de pila completa",
+          "score": 0.5,
+          "label": "Parcial",
+          "detail": "Estado declarado: partial",
+          "evidence": "OpenTelemetry y logs JSON en 4 de 7 servicios; el batch y reporting-service quedan fuera de la trazabilidad distribuida.",
+          "source": "Configuración de instrumentación; tableros",
+          "quality_attributes": [
+            "observabilidad"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "A07",
+      "name": "Estándar de Documentación y Diagramación (C4 / Docs-as-Code)",
+      "kind": "checklist",
+      "weight": 0.05,
+      "score": 50.0,
+      "gate_passed": null,
+      "counts": {
+        "Cumple": 1,
+        "Parcial": 2,
+        "No cumple": 1
+      },
+      "criteria": [
+        {
+          "id": "DOC-01",
+          "name": "Diagrama de contexto (C4 L1) sin detalles tecnológicos",
+          "score": 1.0,
+          "label": "Cumple",
+          "detail": "Estado declarado: pass",
+          "evidence": "Diagrama de contexto con 4 actores y 5 sistemas externos, sin tecnologías, verbos claros.",
+          "source": "SAD sección 5.1",
+          "quality_attributes": [
+            "mantenibilidad"
+          ]
+        },
+        {
+          "id": "DOC-02",
+          "name": "Contenedores (C4 L2) con tecnología y protocolo",
+          "score": 0.5,
+          "label": "Parcial",
+          "detail": "Estado declarado: partial",
+          "evidence": "La vista de contenedores indica tecnologías pero omite el broker Kafka, el job batch y los protocolos de varias relaciones.",
+          "source": "SAD sección 5.2",
+          "quality_attributes": [
+            "mantenibilidad"
+          ]
+        },
+        {
+          "id": "DOC-03",
+          "name": "Diagramas como código (Mermaid en Markdown)",
+          "score": 0.0,
+          "label": "No cumple",
+          "detail": "Estado declarado: fail",
+          "evidence": "Los diagramas están en draw.io exportados a PNG en Confluence; existen tres versiones distintas del diagrama de contenedores.",
+          "source": "Confluence InvestCore/Arquitectura",
+          "quality_attributes": [
+            "mantenibilidad"
+          ]
+        },
+        {
+          "id": "DOC-04",
+          "name": "Contratos OpenAPI / AsyncAPI versionados (SemVer)",
+          "score": 0.5,
+          "label": "Parcial",
+          "detail": "Estado declarado: partial",
+          "evidence": "OpenAPI 3.0 versionado para todas las APIs REST; los 9 tópicos Kafka no tienen especificación AsyncAPI y los esquemas Avro no siguen SemVer.",
+          "source": "Catálogo de APIs; Schema Registry",
+          "quality_attributes": [
+            "interoperabilidad"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "A08",
+      "name": "Guía de Implementación de Observabilidad",
+      "kind": "checklist",
+      "weight": 0.1,
+      "score": 37.5,
+      "gate_passed": null,
+      "counts": {
+        "Parcial": 3,
+        "No cumple": 1
+      },
+      "criteria": [
+        {
+          "id": "OBS-01",
+          "name": "correlationId / traceId íntegro de extremo a extremo",
+          "score": 0.5,
+          "label": "Parcial",
+          "detail": "Estado declarado: partial",
+          "evidence": "El traceId se propaga desde el BFF por los servicios REST y gRPC, pero se pierde en las cabeceras Kafka y no existe en valuation-batch.",
+          "source": "Trazas X-Ray de muestra; configuración de productores Kafka",
+          "quality_attributes": [
+            "observabilidad"
+          ]
+        },
+        {
+          "id": "OBS-02",
+          "name": "Logs 100% JSON, sin PII ni datos bancarios, centralizados",
+          "score": 0.5,
+          "label": "Parcial",
+          "detail": "Estado declarado: partial",
+          "evidence": "Logs centralizados en CloudWatch; 4 de 7 servicios en JSON. reporting-service registra número de cuenta y documento de identidad del cliente en texto plano al generar extractos.",
+          "source": "Muestras de logs de reporting-service 2026-08",
+          "quality_attributes": [
+            "observabilidad",
+            "seguridad",
+            "cumplimiento"
+          ]
+        },
+        {
+          "id": "OBS-03",
+          "name": "Métricas RED/USE y KPIs de negocio en tableros",
+          "score": 0.5,
+          "label": "Parcial",
+          "detail": "Estado declarado: partial",
+          "evidence": "Métricas RED por servicio y USE de nodos en Grafana; no hay KPIs de negocio (portafolios valorados por minuto, órdenes ejecutadas, valor administrado).",
+          "source": "Tableros Grafana",
+          "quality_attributes": [
+            "observabilidad",
+            "operabilidad"
+          ]
+        },
+        {
+          "id": "OBS-04",
+          "name": "Alertas de anomalías y topes de presupuesto (FinOps)",
+          "score": 0.0,
+          "label": "No cumple",
+          "detail": "Estado declarado: fail",
+          "evidence": "Alertas basadas en umbrales estáticos sin detección de anomalías; sin AWS Budgets ni alertas de costo; las alertas llegan a Slack sin throttling ni integración con tickets.",
+          "source": "Reglas de alertas CloudWatch; entrevista SRE",
+          "quality_attributes": [
+            "operabilidad",
+            "finops"
+          ]
+        }
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "id": "H-DOD-03",
+      "criterion_id": "DOD-03",
+      "artifact_id": "A04",
+      "artifact_name": "Definition of Done de Arquitectura y Calidad",
+      "title": "No cumple: Seguridad y gestión de secretos (DevSecOps)",
+      "severity": "Crítico",
+      "theme": "gestión de secretos",
+      "quality_attributes": [
+        "seguridad"
+      ],
+      "evidence": "API key del proveedor de datos de mercado y credenciales SMTP en application.yml versionado en pricing-service y reporting-service; el resto de secretos está en AWS Secrets Manager. No hay escaneo de secretos en el pipeline. (Estado declarado: fail)",
+      "recommendation": "Rotar las credenciales expuestas, migrarlas a AWS Secrets Manager e integrar gitleaks/trufflehog como gate bloqueante del pipeline.",
+      "effort": "bajo",
+      "kb_refs": [
+        "kb/limits/v1/006-secrets-exposure.md",
+        "kb/decisions/v1/007-secrets-management-governance.md"
+      ],
+      "blocking": true
+    },
+    {
+      "id": "H-LIM-001",
+      "criterion_id": "LIM-001",
+      "artifact_id": "A05",
+      "artifact_name": "Catálogo de Límites y Anti-patrones",
+      "title": "No cumple: Fallos en cascada por timeouts y falta de Circuit Breaker",
+      "severity": "Crítico",
+      "theme": "resiliencia",
+      "quality_attributes": [
+        "resiliencia",
+        "disponibilidad"
+      ],
+      "evidence": "pricing-service invoca al proveedor de precios sin timeout ni circuit breaker; el incidente INC-2026-071 produjo 504 en cascada hacia portfolio-service y el BFF. (Estado declarado: violated)",
+      "recommendation": "Configurar timeouts agresivos y Circuit Breaker con fallback en todos los clientes salientes; aislar pools con Bulkheads.",
+      "effort": "medio",
+      "kb_refs": [
+        "kb/limits/v1/001-cascading-failures.md",
+        "kb/decisions/v1/001-asynchronous-communication.md"
+      ],
+      "blocking": true
+    },
+    {
+      "id": "H-LIM-002",
+      "criterion_id": "LIM-002",
+      "artifact_id": "A05",
+      "artifact_name": "Catálogo de Límites y Anti-patrones",
+      "title": "No cumple: Monolito distribuido por base de datos compartida",
+      "severity": "Crítico",
+      "theme": "datos y acoplamiento",
+      "quality_attributes": [
+        "escalabilidad",
+        "mantenibilidad"
+      ],
+      "evidence": "reporting-service lee las tablas 'positions' y 'portfolios' del esquema de portfolio-service; una migración de columna en julio rompió la generación de extractos. (Estado declarado: violated)",
+      "recommendation": "Separar el esquema de reportería con una proyección propia alimentada por eventos (CQRS) y retirar el acceso directo entre servicios.",
+      "effort": "alto",
+      "kb_refs": [
+        "kb/limits/v1/002-shared-database-monolith.md",
+        "kb/decisions/v1/006-persistence-polyglot-strategy.md"
+      ],
+      "blocking": true
+    },
+    {
+      "id": "H-LIM-006",
+      "criterion_id": "LIM-006",
+      "artifact_id": "A05",
+      "artifact_name": "Catálogo de Límites y Anti-patrones",
+      "title": "No cumple: Brechas de seguridad por secretos en código",
+      "severity": "Crítico",
+      "theme": "gestión de secretos",
+      "quality_attributes": [
+        "seguridad",
+        "cumplimiento"
+      ],
+      "evidence": "API key del proveedor de datos de mercado y credenciales SMTP versionadas en application.yml; el historial del repositorio conserva una contraseña de base de datos rotada en 2025. (Estado declarado: violated)",
+      "recommendation": "Rotar y migrar los secretos a Secrets Manager con inyección en tiempo de ejecución; escanear el historial del repositorio y bloquear nuevos secretos en el pipeline.",
+      "effort": "bajo",
+      "kb_refs": [
+        "kb/limits/v1/006-secrets-exposure.md",
+        "kb/decisions/v1/007-secrets-management-governance.md"
+      ],
+      "blocking": true
+    },
+    {
+      "id": "H-LIM-008",
+      "criterion_id": "LIM-008",
+      "artifact_id": "A05",
+      "artifact_name": "Catálogo de Límites y Anti-patrones",
+      "title": "No cumple: Falta de backpressure",
+      "severity": "Crítico",
+      "theme": "rendimiento y escalabilidad",
+      "quality_attributes": [
+        "escalabilidad",
+        "resiliencia"
+      ],
+      "evidence": "El consumidor de valoración procesa sin control de lag ni límite de concurrencia; en la apertura del 29/08 la cola creció hasta agotar memoria (OOM). No hay respuestas 429 en las APIs internas. (Estado declarado: violated)",
+      "recommendation": "Implementar rate limiting en el borde, control de lag en consumidores Kafka y buffers elásticos con DLQ para la valoración.",
+      "effort": "medio",
+      "kb_refs": [
+        "kb/limits/v1/008-missing-backpressure.md",
+        "kb/decisions/v1/001-asynchronous-communication.md"
+      ],
+      "blocking": true
+    },
+    {
+      "id": "H-LIM-010",
+      "criterion_id": "LIM-010",
+      "artifact_id": "A05",
+      "artifact_name": "Catálogo de Límites y Anti-patrones",
+      "title": "No cumple: Reintentos sin control (Retry Storm)",
+      "severity": "Crítico",
+      "theme": "resiliencia",
+      "quality_attributes": [
+        "resiliencia",
+        "disponibilidad"
+      ],
+      "evidence": "El adaptador de ingesta de precios reintenta 3 veces de forma inmediata y sin backoff ante error del proveedor; durante INC-2026-071 el tráfico hacia el proveedor se triplicó. (Estado declarado: violated)",
+      "recommendation": "Configurar reintentos con backoff exponencial y jitter, límite de intentos y Circuit Breaker; derivar reprocesos a colas con DLQ.",
+      "effort": "bajo",
+      "kb_refs": [
+        "kb/limits/v1/010-retry-storms.md",
+        "kb/decisions/v1/001-asynchronous-communication.md"
+      ],
+      "blocking": true
+    },
+    {
+      "id": "H-ADR-002",
+      "criterion_id": "ADR-002",
+      "artifact_id": "A06",
+      "artifact_name": "Conformidad con las Decisiones del Chapter (ADRs)",
+      "title": "No cumple: Uso de bases NoSQL y Database-per-service",
+      "severity": "Crítico",
+      "theme": "datos y acoplamiento",
+      "quality_attributes": [
+        "escalabilidad",
+        "mantenibilidad"
+      ],
+      "evidence": "El esquema compartido entre portfolio-service y reporting-service contradice Database-per-service; el ADR-INV-09 que lo justifica como temporal está sin aprobar y sin fecha de salida. (Estado declarado: unjustified-deviation)",
+      "recommendation": "Registrar un ADR local que fije el plan de separación del esquema compartido y ejecutarlo mediante proyecciones por eventos.",
+      "effort": "alto",
+      "kb_refs": [
+        "kb/decisions/v1/002-nosql-databases-usage.md",
+        "kb/limits/v1/002-shared-database-monolith.md"
+      ],
+      "blocking": false
+    },
+    {
+      "id": "H-ADR-007",
+      "criterion_id": "ADR-007",
+      "artifact_id": "A06",
+      "artifact_name": "Conformidad con las Decisiones del Chapter (ADRs)",
+      "title": "No cumple: Gobierno de secretos con Secret Manager / Vault",
+      "severity": "Crítico",
+      "theme": "gestión de secretos",
+      "quality_attributes": [
+        "seguridad",
+        "cumplimiento"
+      ],
+      "evidence": "Uso mixto: la mayoría de secretos en Secrets Manager pero credenciales críticas en archivos versionados; sin rotación automática. (Estado declarado: unjustified-deviation)",
+      "recommendation": "Completar la migración de todos los secretos a Secrets Manager con rotación automática y eliminar los valores en archivos de configuración.",
+      "effort": "bajo",
+      "kb_refs": [
+        "kb/decisions/v1/007-secrets-management-governance.md"
+      ],
+      "blocking": false
+    },
+    {
+      "id": "H-ADR-003",
+      "criterion_id": "ADR-003",
+      "artifact_id": "A06",
+      "artifact_name": "Conformidad con las Decisiones del Chapter (ADRs)",
+      "title": "No cumple: Adopción de Service Mesh en ecosistemas críticos",
+      "severity": "Alto",
+      "theme": "seguridad de red",
+      "quality_attributes": [
+        "seguridad",
+        "operabilidad"
+      ],
+      "evidence": "Siete microservicios críticos financieros sin service mesh ni alternativa de mTLS; no existe ADR local que documente la decisión de no adoptarlo. (Estado declarado: unjustified-deviation)",
+      "recommendation": "Evaluar y decidir formalmente (ADR local) la adopción de un mesh o de una alternativa de mTLS administrado, con análisis de costo operativo.",
+      "effort": "alto",
+      "kb_refs": [
+        "kb/decisions/v1/003-service-mesh-adoption.md"
+      ],
+      "blocking": false
+    },
+    {
+      "id": "H-DOD-01",
+      "criterion_id": "DOD-01",
+      "artifact_id": "A04",
+      "artifact_name": "Definition of Done de Arquitectura y Calidad",
+      "title": "No cumple: Validación continua (fitness functions)",
+      "severity": "Alto",
+      "theme": "calidad y validación continua",
+      "quality_attributes": [
+        "mantenibilidad",
+        "evolutividad"
+      ],
+      "evidence": "Sin pruebas de arquitectura automatizadas; la regla de dependencias hexagonal se verifica solo en code review. (Estado declarado: fail)",
+      "recommendation": "Codificar fitness functions para la regla de dependencias hexagonal, la prohibición de acceso cruzado a esquemas y los timeouts obligatorios en clientes HTTP.",
+      "effort": "medio",
+      "kb_refs": [
+        "kb/references/v1/architecture-definition-of-done.md"
+      ],
+      "blocking": false
+    },
+    {
+      "id": "H-DOD-04",
+      "criterion_id": "DOD-04",
+      "artifact_id": "A04",
+      "artifact_name": "Definition of Done de Arquitectura y Calidad",
+      "title": "Parcial: Análisis estático (SAST) limpio",
+      "severity": "Alto",
+      "theme": "devsecops",
+      "quality_attributes": [
+        "seguridad",
+        "mantenibilidad"
+      ],
+      "evidence": "SonarQube reporta 3 vulnerabilidades altas abiertas (dependencias) y el gate no es bloqueante; no se escanean imágenes (Trivy) ni IaC (Checkov). (Estado declarado: partial)",
+      "recommendation": "Remediar las vulnerabilidades altas abiertas, incorporar Trivy para imágenes y Checkov para IaC, y hacer bloqueante el quality gate.",
+      "effort": "medio",
+      "kb_refs": [
+        "kb/references/v1/architecture-definition-of-done.md"
+      ],
+      "blocking": false
+    },
+    {
+      "id": "H-DOD-06",
+      "criterion_id": "DOD-06",
+      "artifact_id": "A04",
+      "artifact_name": "Definition of Done de Arquitectura y Calidad",
+      "title": "Parcial: Tolerancia a fallos y rendimiento",
+      "severity": "Alto",
+      "theme": "resiliencia",
+      "quality_attributes": [
+        "resiliencia",
+        "rendimiento"
+      ],
+      "evidence": "Circuit Breaker y timeouts solo en el BFF; los clientes hacia datos de mercado, custodio y core no tienen timeout explícito. Pruebas K6 existen pero se ejecutan manualmente. (Estado declarado: partial)",
+      "recommendation": "Extender Circuit Breaker y timeouts a todos los clientes salientes (datos de mercado, custodio, core) y automatizar las pruebas de carga en el pipeline de pre-producción.",
+      "effort": "medio",
+      "kb_refs": [
+        "kb/limits/v1/001-cascading-failures.md"
+      ],
+      "blocking": false
+    },
+    {
+      "id": "H-DOD-07",
+      "criterion_id": "DOD-07",
+      "artifact_id": "A04",
+      "artifact_name": "Definition of Done de Arquitectura y Calidad",
+      "title": "No cumple: Gestión transparente de la deuda técnica",
+      "severity": "Alto",
+      "theme": "gobierno arquitectónico",
+      "quality_attributes": [
+        "mantenibilidad",
+        "gobierno"
+      ],
+      "evidence": "La deuda se registra en Confluence, fuera del backlog, sin impacto económico ni interés. (Estado declarado: fail)",
+      "recommendation": "Migrar el inventario de deuda a ítems del backlog con impacto e interés, y revisarlos en la planeación de cada release.",
+      "effort": "bajo",
+      "kb_refs": [
+        "kb/references/v1/architecture-definition-of-done.md"
+      ],
+      "blocking": false
+    },
+    {
+      "id": "H-LIM-007",
+      "criterion_id": "LIM-007",
+      "artifact_id": "A05",
+      "artifact_name": "Catálogo de Límites y Anti-patrones",
+      "title": "Parcial: Falta de validación de identidad (sin mTLS)",
+      "severity": "Alto",
+      "theme": "seguridad de red",
+      "quality_attributes": [
+        "seguridad"
+      ],
+      "evidence": "TLS termina en el ingress; el tráfico interno entre pods es HTTP plano. Existen NetworkPolicies por namespace pero no autenticación mutua ni identidad de servicio. (Estado declarado: at-risk)",
+      "recommendation": "Adoptar mTLS administrado (service mesh o certificados gestionados) y políticas Zero Trust entre servicios.",
+      "effort": "alto",
+      "kb_refs": [
+        "kb/limits/v1/007-missing-mtls-identity.md",
+        "kb/decisions/v1/003-service-mesh-adoption.md"
+      ],
+      "blocking": false
+    },
+    {
+      "id": "H-OBS-02",
+      "criterion_id": "OBS-02",
+      "artifact_id": "A08",
+      "artifact_name": "Guía de Implementación de Observabilidad",
+      "title": "Parcial: Logs 100% JSON, sin PII ni datos bancarios, centralizados",
+      "severity": "Alto",
+      "theme": "protección de datos",
+      "quality_attributes": [
+        "observabilidad",
+        "seguridad",
+        "cumplimiento"
+      ],
+      "evidence": "Logs centralizados en CloudWatch; 4 de 7 servicios en JSON. reporting-service registra número de cuenta y documento de identidad del cliente en texto plano al generar extractos. (Estado declarado: partial)",
+      "recommendation": "Aplicar enmascaramiento obligatorio de números de cuenta e identificación en la librería de logging y purgar los registros históricos con PII.",
+      "effort": "bajo",
+      "kb_refs": [
+        "kb/references/v1/observability-implementation-guide.md",
+        "kb/limits/v1/009-insufficient-observability.md"
+      ],
+      "blocking": false
+    },
+    {
+      "id": "H-OBS-04",
+      "criterion_id": "OBS-04",
+      "artifact_id": "A08",
+      "artifact_name": "Guía de Implementación de Observabilidad",
+      "title": "No cumple: Alertas de anomalías y topes de presupuesto (FinOps)",
+      "severity": "Alto",
+      "theme": "capacidad y finops",
+      "quality_attributes": [
+        "operabilidad",
+        "finops"
+      ],
+      "evidence": "Alertas basadas en umbrales estáticos sin detección de anomalías; sin AWS Budgets ni alertas de costo; las alertas llegan a Slack sin throttling ni integración con tickets. (Estado declarado: fail)",
+      "recommendation": "Activar CloudWatch Anomaly Detection y AWS Budgets con alertas al canal de guardia e integración con el sistema de tickets.",
+      "effort": "bajo",
+      "kb_refs": [
+        "kb/references/v1/observability-implementation-guide.md",
+        "kb/limits/v1/004-resource-exhaustion.md"
+      ],
+      "blocking": false
+    },
+    {
+      "id": "H-QAS-01",
+      "criterion_id": "QAS-01",
+      "artifact_id": "A03",
+      "artifact_name": "Escenarios de Atributos de Calidad (ASR / QAW)",
+      "title": "Parcial: Consulta de portafolio con 50% más usuarios concurrentes",
+      "severity": "Alto",
+      "theme": "rendimiento y escalabilidad",
+      "quality_attributes": [
+        "rendimiento",
+        "escalabilidad"
+      ],
+      "evidence": "Prueba K6 con 4.500 VUs: p95 = 2.650 ms y 0,8% de errores; la valoración se calcula en línea llamando a pricing-service por cada posición. (Medido: 2650 ms · Objetivo: <= 2000 ms)",
+      "recommendation": "Introducir vista materializada de posiciones (CQRS) alimentada por eventos de valoración y ampliar la caché de precios, en lugar de calcular la valoración en línea por cada consulta.",
+      "effort": "alto",
+      "kb_refs": [
+        "kb/decisions/v1/004-caching-strategy.md",
+        "kb/limits/v1/001-cascading-failures.md"
+      ],
+      "blocking": false
+    },
+    {
+      "id": "H-QAS-02",
+      "criterion_id": "QAS-02",
+      "artifact_id": "A03",
+      "artifact_name": "Escenarios de Atributos de Calidad (ASR / QAW)",
+      "title": "Parcial: Valoración de fin de día de 250.000 portafolios",
+      "severity": "Alto",
+      "theme": "rendimiento y escalabilidad",
+      "quality_attributes": [
+        "escalabilidad",
+        "rendimiento"
+      ],
+      "evidence": "La valoración de fin de día tomó 41 minutos en promedio en agosto (máximo 53 min el 29/08), con un solo consumidor por partición y 6 particiones. (Medido: 41 min · Objetivo: <= 30 min)",
+      "recommendation": "Particionar la valoración por segmento de portafolio y paralelizar consumidores con control de lag; evaluar Serverless o Jobs efímeros con límites de recursos.",
+      "effort": "alto",
+      "kb_refs": [
+        "kb/decisions/v1/008-deployment-architecture-choice.md",
+        "kb/limits/v1/008-missing-backpressure.md"
+      ],
+      "blocking": false
+    },
+    {
+      "id": "H-QAS-03",
+      "criterion_id": "QAS-03",
+      "artifact_id": "A03",
+      "artifact_name": "Escenarios de Atributos de Calidad (ASR / QAW)",
+      "title": "Parcial: Disponibilidad en horario de mercado",
+      "severity": "Alto",
+      "theme": "resiliencia",
+      "quality_attributes": [
+        "disponibilidad",
+        "resiliencia"
+      ],
+      "evidence": "Disponibilidad de 99,87% en los últimos 3 meses; dos incidentes mayores: caída del proveedor de precios (90 min degradados) y OOM del batch que afectó a la API de valoración. (Medido: 99.87 % · Objetivo: >= 99.9 %)",
+      "recommendation": "Eliminar los puntos únicos de falla identificados (broker en una zona, batch acoplado a la API) y adoptar despliegues progresivos (canary) con rollback automático.",
+      "effort": "medio",
+      "kb_refs": [
+        "kb/limits/v1/001-cascading-failures.md"
+      ],
+      "blocking": false
+    },
+    {
+      "id": "H-QAS-05",
+      "criterion_id": "QAS-05",
+      "artifact_id": "A03",
+      "artifact_name": "Escenarios de Atributos de Calidad (ASR / QAW)",
+      "title": "Parcial: Degradación controlada ante caída del proveedor de precios",
+      "severity": "Alto",
+      "theme": "resiliencia",
+      "quality_attributes": [
+        "resiliencia",
+        "disponibilidad"
+      ],
+      "evidence": "Durante INC-2026-071 el proveedor de precios respondió con latencia > 30 s; pricing-service no tiene timeout ni circuit breaker y los clientes recibieron 504 durante 90 s hasta la intervención manual (solo el BFF tiene Resilience4j). (Medido: 90 s · Objetivo: <= 5 s)",
+      "recommendation": "Implementar Circuit Breaker con timeout explícito y fallback de último precio conocido en el adaptador de datos de mercado (Resilience4j), con prueba de caos que valide el escenario.",
+      "effort": "medio",
+      "kb_refs": [
+        "kb/limits/v1/001-cascading-failures.md",
+        "kb/limits/v1/010-retry-storms.md"
+      ],
+      "blocking": false
+    },
+    {
+      "id": "H-QAS-06",
+      "criterion_id": "QAS-06",
+      "artifact_id": "A03",
+      "artifact_name": "Escenarios de Atributos de Calidad (ASR / QAW)",
+      "title": "Parcial: Autorización completa sobre datos de portafolio",
+      "severity": "Alto",
+      "theme": "seguridad de aplicación",
+      "quality_attributes": [
+        "seguridad"
+      ],
+      "evidence": "48 de 50 endpoints que exponen datos de portafolio o cliente aplican autorización; 2 endpoints internos de reporting-service (/internal/positions, /internal/statements) solo validan red y no identidad. (Medido: 96 % · Objetivo: >= 100 %)",
+      "recommendation": "Cerrar los endpoints internos sin autorización, centralizar la política de autorización (OPA o filtro común) y añadir pruebas DAST de autorización al pipeline.",
+      "effort": "medio",
+      "kb_refs": [
+        "kb/limits/v1/007-missing-mtls-identity.md",
+        "kb/references/v1/architecture-definition-of-done.md"
+      ],
+      "blocking": false
+    },
+    {
+      "id": "H-VAL-02",
+      "criterion_id": "VAL-02",
+      "artifact_id": "A01",
+      "artifact_name": "Rúbrica de Perspectiva y Valores de Ingeniería",
+      "title": "Parcial: Desacoplamiento y alta cohesión (Bounded Contexts)",
+      "severity": "Alto",
+      "theme": "datos y acoplamiento",
+      "quality_attributes": [
+        "mantenibilidad",
+        "escalabilidad"
+      ],
+      "evidence": "Los contextos están separados en servicios, pero reporting-service lee directamente las tablas de portfolio-service y risk-compliance consulta customer-service de forma síncrona en cada evaluación. (Nivel 1/4 — Servicios separados pero con acoplamiento por base de datos y llamadas cruzadas.)",
+      "recommendation": "Formalizar el mapa de contextos (Context Map) con relaciones explícitas y eliminar el acceso directo a datos de otros contextos mediante APIs o eventos.",
+      "effort": "alto",
+      "kb_refs": [
+        "kb/perspective.md",
+        "kb/limits/v1/002-shared-database-monolith.md"
+      ],
+      "blocking": false
+    },
+    {
+      "id": "H-WF-02",
+      "criterion_id": "WF-02",
+      "artifact_id": "A02",
+      "artifact_name": "Checklist del Flujo de Diseño Arquitectónico",
+      "title": "Parcial: Atributos de calidad (ASRs) con métricas y SLOs",
+      "severity": "Alto",
+      "theme": "gobierno arquitectónico",
+      "quality_attributes": [
+        "rendimiento",
+        "escalabilidad",
+        "disponibilidad"
+      ],
+      "evidence": "Los requisitos no funcionales existen como lista textual ('alta disponibilidad', 'respuesta rápida') sin escenarios estímulo-respuesta ni SLOs formales; los escenarios de este assessment se construyeron durante la evaluación. (Estado declarado: partial)",
+      "recommendation": "Formalizar los escenarios de calidad con la plantilla estímulo-respuesta-medida y convertirlos en SLOs monitoreados.",
+      "effort": "bajo",
+      "kb_refs": [
+        "kb/references/v1/architectural-design-workflow.md"
+      ],
+      "blocking": false
+    },
+    {
+      "id": "H-WF-06",
+      "criterion_id": "WF-06",
+      "artifact_id": "A02",
+      "artifact_name": "Checklist del Flujo de Diseño Arquitectónico",
+      "title": "No cumple: Verificación continua: fitness functions y deuda en el backlog",
+      "severity": "Alto",
+      "theme": "calidad y validación continua",
+      "quality_attributes": [
+        "mantenibilidad",
+        "evolutividad"
+      ],
+      "evidence": "No existen fitness functions (sin ArchUnit ni reglas de dependencia automatizadas); la deuda no se gestiona en sprints. (Estado declarado: fail)",
+      "recommendation": "Incorporar ArchUnit en los servicios Java y reglas de dependencia en el frontend, ejecutadas en CI/CD.",
+      "effort": "medio",
+      "kb_refs": [
+        "kb/references/v1/architectural-design-workflow.md",
+        "kb/references/v1/architecture-definition-of-done.md"
+      ],
+      "blocking": false
+    },
+    {
+      "id": "H-ADR-006",
+      "criterion_id": "ADR-006",
+      "artifact_id": "A06",
+      "artifact_name": "Conformidad con las Decisiones del Chapter (ADRs)",
+      "title": "Parcial: Persistencia políglota por Bounded Context",
+      "severity": "Medio",
+      "theme": "datos y acoplamiento",
+      "quality_attributes": [
+        "escalabilidad",
+        "mantenibilidad"
+      ],
+      "evidence": "PostgreSQL para portafolio y órdenes, MongoDB para riesgo/cumplimiento y Redis para precios, alineado con la estrategia políglota; sin embargo el aislamiento por contexto se rompe en reporting-service. (Estado declarado: partial)",
+      "recommendation": "Documentar la estrategia de consistencia eventual entre motores y las responsabilidades de respaldo por motor.",
+      "effort": "bajo",
+      "kb_refs": [
+        "kb/decisions/v1/006-persistence-polyglot-strategy.md"
+      ],
+      "blocking": false
+    },
+    {
+      "id": "H-ADR-009",
+      "criterion_id": "ADR-009",
+      "artifact_id": "A06",
+      "artifact_name": "Conformidad con las Decisiones del Chapter (ADRs)",
+      "title": "Parcial: Observabilidad de pila completa",
+      "severity": "Medio",
+      "theme": "observabilidad",
+      "quality_attributes": [
+        "observabilidad"
+      ],
+      "evidence": "OpenTelemetry y logs JSON en 4 de 7 servicios; el batch y reporting-service quedan fuera de la trazabilidad distribuida. (Estado declarado: partial)",
+      "recommendation": "Completar la instrumentación OpenTelemetry en los servicios y jobs restantes.",
+      "effort": "medio",
+      "kb_refs": [
+        "kb/decisions/v1/009-observability-full-stack.md"
+      ],
+      "blocking": false
+    },
+    {
+      "id": "H-DOC-03",
+      "criterion_id": "DOC-03",
+      "artifact_id": "A07",
+      "artifact_name": "Estándar de Documentación y Diagramación (C4 / Docs-as-Code)",
+      "title": "No cumple: Diagramas como código (Mermaid en Markdown)",
+      "severity": "Medio",
+      "theme": "documentación",
+      "quality_attributes": [
+        "mantenibilidad"
+      ],
+      "evidence": "Los diagramas están en draw.io exportados a PNG en Confluence; existen tres versiones distintas del diagrama de contenedores. (Estado declarado: fail)",
+      "recommendation": "Migrar los diagramas de draw.io a Mermaid dentro del repositorio de documentación y eliminar las copias desactualizadas.",
+      "effort": "bajo",
+      "kb_refs": [
+        "kb/references/v1/documentation-and-diagramming-standard.md"
+      ],
+      "blocking": false
+    },
+    {
+      "id": "H-DOC-04",
+      "criterion_id": "DOC-04",
+      "artifact_id": "A07",
+      "artifact_name": "Estándar de Documentación y Diagramación (C4 / Docs-as-Code)",
+      "title": "Parcial: Contratos OpenAPI / AsyncAPI versionados (SemVer)",
+      "severity": "Medio",
+      "theme": "contratos e integración",
+      "quality_attributes": [
+        "interoperabilidad"
+      ],
+      "evidence": "OpenAPI 3.0 versionado para todas las APIs REST; los 9 tópicos Kafka no tienen especificación AsyncAPI y los esquemas Avro no siguen SemVer. (Estado declarado: partial)",
+      "recommendation": "Publicar especificaciones AsyncAPI para los tópicos de órdenes, precios y valoración, versionadas con SemVer.",
+      "effort": "bajo",
+      "kb_refs": [
+        "kb/references/v1/documentation-and-diagramming-standard.md",
+        "kb/decisions/v1/005-communication-protocols-standard.md"
+      ],
+      "blocking": false
+    },
+    {
+      "id": "H-DOD-02",
+      "criterion_id": "DOD-02",
+      "artifact_id": "A04",
+      "artifact_name": "Definition of Done de Arquitectura y Calidad",
+      "title": "Parcial: Cobertura mínima de pruebas del 80%",
+      "severity": "Medio",
+      "theme": "calidad y validación continua",
+      "quality_attributes": [
+        "mantenibilidad",
+        "confiabilidad"
+      ],
+      "evidence": "Cobertura global 62% (valuation-service 48%, order-service 81%, reporting-service 39%); el umbral no bloquea el pipeline. (Estado declarado: partial)",
+      "recommendation": "Fijar el umbral de cobertura como gate bloqueante en SonarQube y priorizar pruebas en los servicios de valoración y órdenes.",
+      "effort": "medio",
+      "kb_refs": [
+        "kb/references/v1/architecture-definition-of-done.md"
+      ],
+      "blocking": false
+    },
+    {
+      "id": "H-DOD-08",
+      "criterion_id": "DOD-08",
+      "artifact_id": "A04",
+      "artifact_name": "Definition of Done de Arquitectura y Calidad",
+      "title": "Parcial: Trazabilidad de observabilidad",
+      "severity": "Medio",
+      "theme": "observabilidad",
+      "quality_attributes": [
+        "observabilidad"
+      ],
+      "evidence": "4 de 7 servicios emiten logs JSON con traceId; valuation-batch y reporting-service emiten texto plano; health checks presentes en todos. (Estado declarado: partial)",
+      "recommendation": "Estandarizar el logging JSON con la librería común en los servicios restantes y propagar el traceId a los jobs batch y consumidores Kafka.",
+      "effort": "medio",
+      "kb_refs": [
+        "kb/limits/v1/009-insufficient-observability.md"
+      ],
+      "blocking": false
+    },
+    {
+      "id": "H-DOD-10",
+      "criterion_id": "DOD-10",
+      "artifact_id": "A04",
+      "artifact_name": "Definition of Done de Arquitectura y Calidad",
+      "title": "Parcial: Contratos e interoperabilidad estricta",
+      "severity": "Medio",
+      "theme": "contratos e integración",
+      "quality_attributes": [
+        "interoperabilidad",
+        "mantenibilidad"
+      ],
+      "evidence": "APIs versionadas (/v1) con pruebas de contrato Pact entre BFF y servicios; el Swagger publicado de reporting-service y customer-service no coincide con el código (drift detectado en 6 endpoints). (Estado declarado: partial)",
+      "recommendation": "Generar la especificación OpenAPI desde el código en el pipeline y validar el drift contra la publicada; publicar AsyncAPI para los eventos.",
+      "effort": "bajo",
+      "kb_refs": [
+        "kb/limits/v1/003-fragile-contracts.md"
+      ],
+      "blocking": false
+    },
+    {
+      "id": "H-LIM-004",
+      "criterion_id": "LIM-004",
+      "artifact_id": "A05",
+      "artifact_name": "Catálogo de Límites y Anti-patrones",
+      "title": "Parcial: Hambre de recursos (Resource Exhaustion)",
+      "severity": "Medio",
+      "theme": "capacidad y finops",
+      "quality_attributes": [
+        "escalabilidad",
+        "finops"
+      ],
+      "evidence": "5 de 7 despliegues definen requests/limits; valuation-batch y legacy-acl no los definen y el batch fue OOMKilled el 29/08 afectando el nodo. No hay alertas de anomalía de costos. (Estado declarado: at-risk)",
+      "recommendation": "Definir requests/limits para todos los despliegues vía IaC y bloquear en el pipeline los manifiestos sin cuotas; activar alertas de anomalía de costos.",
+      "effort": "bajo",
+      "kb_refs": [
+        "kb/limits/v1/004-resource-exhaustion.md",
+        "kb/decisions/v1/008-deployment-architecture-choice.md"
+      ],
+      "blocking": false
+    },
+    {
+      "id": "H-LIM-005",
+      "criterion_id": "LIM-005",
+      "artifact_id": "A05",
+      "artifact_name": "Catálogo de Límites y Anti-patrones",
+      "title": "Parcial: Saturación de pools de conexión",
+      "severity": "Medio",
+      "theme": "capacidad y finops",
+      "quality_attributes": [
+        "rendimiento",
+        "disponibilidad"
+      ],
+      "evidence": "HikariCP con tamaño por defecto (10) en valuation-service; en el cierre de mercado se observan esperas de conexión > 5 s y advertencias 'connection is not available'. (Estado declarado: at-risk)",
+      "recommendation": "Dimensionar el pool según la concurrencia real, aplicar timeouts de adquisición y desviar lecturas calientes a caché.",
+      "effort": "bajo",
+      "kb_refs": [
+        "kb/limits/v1/005-connection-pool-saturation.md",
+        "kb/decisions/v1/004-caching-strategy.md"
+      ],
+      "blocking": false
+    },
+    {
+      "id": "H-LIM-009",
+      "criterion_id": "LIM-009",
+      "artifact_id": "A05",
+      "artifact_name": "Catálogo de Límites y Anti-patrones",
+      "title": "Parcial: Logging insuficiente (ceguera operacional)",
+      "severity": "Medio",
+      "theme": "observabilidad",
+      "quality_attributes": [
+        "observabilidad"
+      ],
+      "evidence": "Logs centralizados en CloudWatch, pero valuation-batch y reporting-service emiten texto plano sin traceId, lo que impidió correlacionar el incidente INC-2026-088 en menos de 2 horas. (Estado declarado: at-risk)",
+      "recommendation": "Completar la adopción de la librería de logging JSON y de OpenTelemetry en todos los servicios y jobs.",
+      "effort": "medio",
+      "kb_refs": [
+        "kb/limits/v1/009-insufficient-observability.md",
+        "kb/decisions/v1/009-observability-full-stack.md"
+      ],
+      "blocking": false
+    },
+    {
+      "id": "H-OBS-01",
+      "criterion_id": "OBS-01",
+      "artifact_id": "A08",
+      "artifact_name": "Guía de Implementación de Observabilidad",
+      "title": "Parcial: correlationId / traceId íntegro de extremo a extremo",
+      "severity": "Medio",
+      "theme": "observabilidad",
+      "quality_attributes": [
+        "observabilidad"
+      ],
+      "evidence": "El traceId se propaga desde el BFF por los servicios REST y gRPC, pero se pierde en las cabeceras Kafka y no existe en valuation-batch. (Estado declarado: partial)",
+      "recommendation": "Propagar el contexto de traza en las cabeceras de Kafka y en los jobs batch usando la instrumentación OpenTelemetry.",
+      "effort": "medio",
+      "kb_refs": [
+        "kb/references/v1/observability-implementation-guide.md"
+      ],
+      "blocking": false
+    },
+    {
+      "id": "H-OBS-03",
+      "criterion_id": "OBS-03",
+      "artifact_id": "A08",
+      "artifact_name": "Guía de Implementación de Observabilidad",
+      "title": "Parcial: Métricas RED/USE y KPIs de negocio en tableros",
+      "severity": "Medio",
+      "theme": "observabilidad",
+      "quality_attributes": [
+        "observabilidad",
+        "operabilidad"
+      ],
+      "evidence": "Métricas RED por servicio y USE de nodos en Grafana; no hay KPIs de negocio (portafolios valorados por minuto, órdenes ejecutadas, valor administrado). (Estado declarado: partial)",
+      "recommendation": "Añadir métricas de negocio (portafolios valorados/min, órdenes ejecutadas, valor administrado) y cruzarlas con errores en el tablero.",
+      "effort": "bajo",
+      "kb_refs": [
+        "kb/references/v1/observability-implementation-guide.md"
+      ],
+      "blocking": false
+    },
+    {
+      "id": "H-QAS-04",
+      "criterion_id": "QAS-04",
+      "artifact_id": "A03",
+      "artifact_name": "Escenarios de Atributos de Calidad (ASR / QAW)",
+      "title": "Parcial: Ingesta sostenida de precios de mercado",
+      "severity": "Medio",
+      "theme": "rendimiento y escalabilidad",
+      "quality_attributes": [
+        "escalabilidad",
+        "rendimiento"
+      ],
+      "evidence": "En la prueba de ingesta el lag del tópico 'market.prices' crece a partir de 14.000 ticks/s; el consumidor no aplica backpressure y los reintentos del adaptador de ingesta son inmediatos. (Medido: 14000 ticks/s · Objetivo: >= 20000 ticks/s)",
+      "recommendation": "Aumentar particiones del tópico de precios, escalar consumidores con autoscaling por lag y aplicar backpressure en el adaptador de ingesta.",
+      "effort": "medio",
+      "kb_refs": [
+        "kb/limits/v1/008-missing-backpressure.md",
+        "kb/decisions/v1/001-asynchronous-communication.md"
+      ],
+      "blocking": false
+    },
+    {
+      "id": "H-QAS-07",
+      "criterion_id": "QAS-07",
+      "artifact_id": "A03",
+      "artifact_name": "Escenarios de Atributos de Calidad (ASR / QAW)",
+      "title": "Parcial: Recuperación ante desastre (RPO/RTO)",
+      "severity": "Medio",
+      "theme": "continuidad del negocio",
+      "quality_attributes": [
+        "disponibilidad",
+        "continuidad"
+      ],
+      "evidence": "Snapshots de RDS cada hora (RPO efectivo 60 min) y runbook manual de conmutación ejecutado en 45 min en el ejercicio de DR de junio 2026. (Medido: 45 min · Objetivo: <= 30 min)",
+      "recommendation": "Pasar de snapshots horarios a replicación continua (réplica de lectura cross-region) y automatizar el runbook de conmutación con ejercicio semestral.",
+      "effort": "alto",
+      "kb_refs": [
+        "kb/references/v1/architectural-design-workflow.md"
+      ],
+      "blocking": false
+    },
+    {
+      "id": "H-QAS-08",
+      "criterion_id": "QAS-08",
+      "artifact_id": "A03",
+      "artifact_name": "Escenarios de Atributos de Calidad (ASR / QAW)",
+      "title": "Parcial: Modificabilidad: incorporar un nuevo tipo de activo",
+      "severity": "Medio",
+      "theme": "diseño evolutivo",
+      "quality_attributes": [
+        "mantenibilidad",
+        "evolutividad"
+      ],
+      "evidence": "La incorporación de notas estructuradas tomó 18 días-persona y modificó 4 servicios (valuation, portfolio, reporting, order). (Medido: 18 días-persona · Objetivo: <= 10 días-persona)",
+      "recommendation": "Modelar 'Instrumento' como agregado con estrategia de valoración por tipo (patrón Strategy + Factory) y externalizar reglas por instrumento a configuración versionada.",
+      "effort": "alto",
+      "kb_refs": [
+        "kb/perspective.md",
+        "kb/business-solutions/clients/ficohsa/references/v1/architecture-guidelines-scenarios.md"
+      ],
+      "blocking": false
+    },
+    {
+      "id": "H-VAL-01",
+      "criterion_id": "VAL-01",
+      "artifact_id": "A01",
+      "artifact_name": "Rúbrica de Perspectiva y Valores de Ingeniería",
+      "title": "Parcial: Evolutividad y agilidad arquitectónica",
+      "severity": "Medio",
+      "theme": "diseño evolutivo",
+      "quality_attributes": [
+        "mantenibilidad",
+        "evolutividad"
+      ],
+      "evidence": "La última incorporación de un instrumento (nota estructurada) tocó 4 servicios y tomó 18 días-persona; existe abstracción 'Instrument' pero la valoración por tipo está codificada con condicionales en valuation-service. (Nivel 2/4 — Existen algunos puntos de extensión pero el cambio típico cruza más de dos servicios.)",
+      "recommendation": "Definir puntos de extensión explícitos en el dominio (estrategias por tipo de activo, reglas como configuración) y medir el costo de cambio por sprint como métrica arquitectónica.",
+      "effort": "medio",
+      "kb_refs": [
+        "kb/perspective.md",
+        "kb/references/v1/architectural-design-workflow.md"
+      ],
+      "blocking": false
+    },
+    {
+      "id": "H-VAL-04",
+      "criterion_id": "VAL-04",
+      "artifact_id": "A01",
+      "artifact_name": "Rúbrica de Perspectiva y Valores de Ingeniería",
+      "title": "Parcial: Independencia tecnológica (Clean / Hexagonal)",
+      "severity": "Medio",
+      "theme": "arquitectura interna",
+      "quality_attributes": [
+        "mantenibilidad",
+        "portabilidad"
+      ],
+      "evidence": "5 de 7 servicios siguen el arquetipo hexagonal del Chapter; reporting-service y legacy-acl mezclan lógica de negocio en controladores y repositorios JPA. (Nivel 2/4 — La mayoría de servicios aplica puertos y adaptadores; hay excepciones.)",
+      "recommendation": "Aplicar el arquetipo hexagonal del Chapter en los servicios que mezclan dominio e infraestructura y proteger la regla de dependencias con pruebas de arquitectura.",
+      "effort": "medio",
+      "kb_refs": [
+        "kb/perspective.md",
+        "kb/references/v1/architecture-definition-of-done.md"
+      ],
+      "blocking": false
+    },
+    {
+      "id": "H-VAL-05",
+      "criterion_id": "VAL-05",
+      "artifact_id": "A01",
+      "artifact_name": "Rúbrica de Perspectiva y Valores de Ingeniería",
+      "title": "Parcial: Observabilidad y medibilidad (SLIs / SLOs)",
+      "severity": "Medio",
+      "theme": "observabilidad",
+      "quality_attributes": [
+        "observabilidad",
+        "operabilidad"
+      ],
+      "evidence": "Existen métricas RED en Grafana y un objetivo informal de p95 < 2 s; no hay SLOs formales ni presupuesto de error por capacidad de negocio. (Nivel 2/4 — Métricas técnicas con algunos objetivos informales.)",
+      "recommendation": "Definir SLIs por capacidad de negocio (valoración, órdenes, reportes), fijar SLOs y publicar tableros con presupuesto de error.",
+      "effort": "medio",
+      "kb_refs": [
+        "kb/perspective.md",
+        "kb/decisions/v1/009-observability-full-stack.md"
+      ],
+      "blocking": false
+    },
+    {
+      "id": "H-VAL-06",
+      "criterion_id": "VAL-06",
+      "artifact_id": "A01",
+      "artifact_name": "Rúbrica de Perspectiva y Valores de Ingeniería",
+      "title": "Parcial: El dominio dicta las reglas (DDD y lenguaje ubicuo)",
+      "severity": "Medio",
+      "theme": "gobierno arquitectónico",
+      "quality_attributes": [
+        "mantenibilidad",
+        "alineación con negocio"
+      ],
+      "evidence": "Glosario ubicuo publicado (Portafolio, Posición, Orden, Ejecución, Valoración, Instrumento); los eventos Kafka y las APIs usan esos términos. Falta cubrir el contexto de cumplimiento. (Nivel 3/4 — Lenguaje ubicuo documentado y reflejado en código, eventos y APIs.)",
+      "recommendation": "Ejecutar sesiones de Event Storming con negocio, publicar el glosario ubicuo y alinear nombres de agregados, eventos y APIs con ese glosario.",
+      "effort": "medio",
+      "kb_refs": [
+        "kb/perspective.md",
+        "kb/references/v1/architectural-design-workflow.md"
+      ],
+      "blocking": false
+    },
+    {
+      "id": "H-VAL-07",
+      "criterion_id": "VAL-07",
+      "artifact_id": "A01",
+      "artifact_name": "Rúbrica de Perspectiva y Valores de Ingeniería",
+      "title": "Parcial: Decisiones formales con trade-offs explícitos (ADRs y SAD)",
+      "severity": "Medio",
+      "theme": "gobierno arquitectónico",
+      "quality_attributes": [
+        "gobierno",
+        "mantenibilidad"
+      ],
+      "evidence": "Existen 5 ADRs locales con plantilla propia (sin sección de trade-offs económicos); decisiones como la ausencia de mesh o el esquema compartido no tienen ADR aprobado. El SAD está desactualizado (v2025.11). (Nivel 2/4 — ADRs para algunas decisiones; sin trade-offs explícitos.)",
+      "recommendation": "Adoptar la plantilla de decisión del Chapter, completar los ADRs faltantes para decisiones ya tomadas y consolidar el SAD como documento vivo.",
+      "effort": "bajo",
+      "kb_refs": [
+        "kb/perspective.md",
+        "tools/templates/kb/decision.md.template"
+      ],
+      "blocking": false
+    },
+    {
+      "id": "H-VAL-08",
+      "criterion_id": "VAL-08",
+      "artifact_id": "A01",
+      "artifact_name": "Rúbrica de Perspectiva y Valores de Ingeniería",
+      "title": "Parcial: Gestión activa y visible de la deuda técnica",
+      "severity": "Medio",
+      "theme": "gobierno arquitectónico",
+      "quality_attributes": [
+        "mantenibilidad",
+        "gobierno"
+      ],
+      "evidence": "La deuda técnica está inventariada en una página de Confluence (23 ítems) sin estimación de impacto ni capacidad reservada; no se miden métricas DORA completas. (Nivel 2/4 — Deuda documentada fuera del backlog, sin priorización ni capacidad asignada.)",
+      "recommendation": "Crear el registro de deuda técnica en el backlog con impacto económico e interés, reservar capacidad por sprint para su pago y publicar métricas DORA.",
+      "effort": "bajo",
+      "kb_refs": [
+        "kb/perspective.md",
+        "kb/references/v1/architecture-definition-of-done.md"
+      ],
+      "blocking": false
+    },
+    {
+      "id": "H-WF-01",
+      "criterion_id": "WF-01",
+      "artifact_id": "A02",
+      "artifact_name": "Checklist del Flujo de Diseño Arquitectónico",
+      "title": "Parcial: Capacidades de negocio y lenguaje ubicuo documentados",
+      "severity": "Medio",
+      "theme": "gobierno arquitectónico",
+      "quality_attributes": [
+        "alineación con negocio",
+        "mantenibilidad"
+      ],
+      "evidence": "Se realizó Event Storming en 2024 para portafolio, órdenes y valoración; los contextos de riesgo/cumplimiento y cliente se modelaron sin taller y sin mapa de capacidades actualizado. (Estado declarado: partial)",
+      "recommendation": "Realizar Event Storming por contexto faltante y publicar el mapa de capacidades y el glosario en el repositorio de documentación.",
+      "effort": "medio",
+      "kb_refs": [
+        "kb/references/v1/architectural-design-workflow.md"
+      ],
+      "blocking": false
+    },
+    {
+      "id": "H-WF-03",
+      "criterion_id": "WF-03",
+      "artifact_id": "A02",
+      "artifact_name": "Checklist del Flujo de Diseño Arquitectónico",
+      "title": "Parcial: ADRs explícitos para las decisiones clave",
+      "severity": "Medio",
+      "theme": "gobierno arquitectónico",
+      "quality_attributes": [
+        "gobierno"
+      ],
+      "evidence": "Hay ADRs para estilo (microservicios), eventos (Kafka), caché y despliegue del batch; no hay ADR para persistencia por servicio, seguridad interna ni observabilidad. (Estado declarado: partial)",
+      "recommendation": "Completar los ADRs faltantes usando la plantilla del Chapter y vincularlos desde el SAD.",
+      "effort": "bajo",
+      "kb_refs": [
+        "kb/references/v1/architectural-design-workflow.md",
+        "tools/templates/kb/decision.md.template"
+      ],
+      "blocking": false
+    },
+    {
+      "id": "H-WF-04",
+      "criterion_id": "WF-04",
+      "artifact_id": "A02",
+      "artifact_name": "Checklist del Flujo de Diseño Arquitectónico",
+      "title": "Parcial: Vistas C4 estandarizadas y contratos API-First",
+      "severity": "Medio",
+      "theme": "documentación",
+      "quality_attributes": [
+        "mantenibilidad",
+        "interoperabilidad"
+      ],
+      "evidence": "Vistas C4 L1 y L2 existentes; sin vista de componentes para valuation-service y order-service. Contratos OpenAPI definidos antes de implementar; los eventos Kafka no tienen contrato formal. (Estado declarado: partial)",
+      "recommendation": "Completar la vista de componentes de los servicios críticos y publicar los contratos de eventos con AsyncAPI.",
+      "effort": "medio",
+      "kb_refs": [
+        "kb/references/v1/documentation-and-diagramming-standard.md"
+      ],
+      "blocking": false
+    },
+    {
+      "id": "H-WF-05",
+      "criterion_id": "WF-05",
+      "artifact_id": "A02",
+      "artifact_name": "Checklist del Flujo de Diseño Arquitectónico",
+      "title": "Parcial: Diseño de infraestructura y DevSecOps (IaC, topología, quality gates)",
+      "severity": "Medio",
+      "theme": "devsecops",
+      "quality_attributes": [
+        "seguridad",
+        "operabilidad"
+      ],
+      "evidence": "IaC con Terraform para EKS, RDS y MSK; Redis y reglas de WAF configurados manualmente. El pipeline ejecuta SonarQube pero el quality gate no bloquea el despliegue. (Estado declarado: partial)",
+      "recommendation": "Hacer bloqueantes los quality gates del pipeline (SAST, secretos, cobertura) y completar la IaC para los componentes que se gestionan manualmente.",
+      "effort": "medio",
+      "kb_refs": [
+        "kb/references/v1/architectural-design-workflow.md"
+      ],
+      "blocking": false
+    },
+    {
+      "id": "H-ADR-008",
+      "criterion_id": "ADR-008",
+      "artifact_id": "A06",
+      "artifact_name": "Conformidad con las Decisiones del Chapter (ADRs)",
+      "title": "Parcial: Elección de arquitectura de despliegue (Kubernetes vs Serverless)",
+      "severity": "Bajo",
+      "theme": "capacidad y finops",
+      "quality_attributes": [
+        "finops",
+        "escalabilidad"
+      ],
+      "evidence": "El batch de valoración (carga intermitente) corre en EKS y no en Serverless; el ADR-INV-07 justifica la desviación por duración > 15 min y warm-up de JVM, con trade-offs documentados. (Estado declarado: justified-deviation)",
+      "recommendation": "Revisar anualmente la decisión local sobre el batch de valoración conforme evolucionen los límites de ejecución Serverless.",
+      "effort": "bajo",
+      "kb_refs": [
+        "kb/decisions/v1/008-deployment-architecture-choice.md"
+      ],
+      "blocking": false
+    },
+    {
+      "id": "H-DOC-02",
+      "criterion_id": "DOC-02",
+      "artifact_id": "A07",
+      "artifact_name": "Estándar de Documentación y Diagramación (C4 / Docs-as-Code)",
+      "title": "Parcial: Contenedores (C4 L2) con tecnología y protocolo",
+      "severity": "Bajo",
+      "theme": "documentación",
+      "quality_attributes": [
+        "mantenibilidad"
+      ],
+      "evidence": "La vista de contenedores indica tecnologías pero omite el broker Kafka, el job batch y los protocolos de varias relaciones. (Estado declarado: partial)",
+      "recommendation": "Completar la vista de contenedores con el broker, los jobs batch y los protocolos de cada relación.",
+      "effort": "bajo",
+      "kb_refs": [
+        "kb/references/v1/documentation-and-diagramming-standard.md"
+      ],
+      "blocking": false
+    },
+    {
+      "id": "H-DOD-05",
+      "criterion_id": "DOD-05",
+      "artifact_id": "A04",
+      "artifact_name": "Definition of Done de Arquitectura y Calidad",
+      "title": "Parcial: Métricas DORA y observabilidad de CI/CD",
+      "severity": "Bajo",
+      "theme": "gobierno arquitectónico",
+      "quality_attributes": [
+        "operabilidad",
+        "gobierno"
+      ],
+      "evidence": "Se mide Deployment Frequency (3/semana) y Lead Time; MTTR y Change Failure Rate no se capturan. (Estado declarado: partial)",
+      "recommendation": "Instrumentar el pipeline para capturar las cuatro métricas DORA y publicarlas en el tablero de ingeniería.",
+      "effort": "bajo",
+      "kb_refs": [
+        "kb/references/v1/architecture-definition-of-done.md"
+      ],
+      "blocking": false
+    },
+    {
+      "id": "H-VAL-03",
+      "criterion_id": "VAL-03",
+      "artifact_id": "A01",
+      "artifact_name": "Rúbrica de Perspectiva y Valores de Ingeniería",
+      "title": "Parcial: Simplicidad esencial",
+      "severity": "Bajo",
+      "theme": "diseño evolutivo",
+      "quality_attributes": [
+        "mantenibilidad"
+      ],
+      "evidence": "Inventario de componentes justificado; se detectó un servicio 'notification-orchestrator' sin uso desde 2025 que ya está marcado para retiro. (Nivel 3/4 — Cada componente tiene una razón de negocio documentada.)",
+      "recommendation": "Inventariar componentes y abstracciones sin justificación de negocio y retirarlos o consolidarlos; documentar la justificación de los que permanecen.",
+      "effort": "bajo",
+      "kb_refs": [
+        "kb/perspective.md"
+      ],
+      "blocking": false
+    }
+  ],
+  "roadmap": [
+    {
+      "theme": "resiliencia",
+      "horizon": "0-30 días",
+      "severity": "Crítico",
+      "actions": [
+        "Configurar timeouts agresivos y Circuit Breaker con fallback en todos los clientes salientes; aislar pools con Bulkheads.",
+        "Configurar reintentos con backoff exponencial y jitter, límite de intentos y Circuit Breaker; derivar reprocesos a colas con DLQ.",
+        "Extender Circuit Breaker y timeouts a todos los clientes salientes (datos de mercado, custodio, core) y automatizar las pruebas de carga en el pipeline de pre-producción.",
+        "Eliminar los puntos únicos de falla identificados (broker en una zona, batch acoplado a la API) y adoptar despliegues progresivos (canary) con rollback automático.",
+        "Implementar Circuit Breaker con timeout explícito y fallback de último precio conocido en el adaptador de datos de mercado (Resilience4j), con prueba de caos que valide el escenario."
+      ],
+      "criteria": [
+        "DOD-06",
+        "LIM-001",
+        "LIM-010",
+        "QAS-03",
+        "QAS-05"
+      ],
+      "effort": "medio"
+    },
+    {
+      "theme": "datos y acoplamiento",
+      "horizon": "0-30 días",
+      "severity": "Crítico",
+      "actions": [
+        "Separar el esquema de reportería con una proyección propia alimentada por eventos (CQRS) y retirar el acceso directo entre servicios.",
+        "Registrar un ADR local que fije el plan de separación del esquema compartido y ejecutarlo mediante proyecciones por eventos.",
+        "Formalizar el mapa de contextos (Context Map) con relaciones explícitas y eliminar el acceso directo a datos de otros contextos mediante APIs o eventos.",
+        "Documentar la estrategia de consistencia eventual entre motores y las responsabilidades de respaldo por motor."
+      ],
+      "criteria": [
+        "ADR-002",
+        "ADR-006",
+        "LIM-002",
+        "VAL-02"
+      ],
+      "effort": "alto"
+    },
+    {
+      "theme": "rendimiento y escalabilidad",
+      "horizon": "0-30 días",
+      "severity": "Crítico",
+      "actions": [
+        "Implementar rate limiting en el borde, control de lag en consumidores Kafka y buffers elásticos con DLQ para la valoración.",
+        "Introducir vista materializada de posiciones (CQRS) alimentada por eventos de valoración y ampliar la caché de precios, en lugar de calcular la valoración en línea por cada consulta.",
+        "Particionar la valoración por segmento de portafolio y paralelizar consumidores con control de lag; evaluar Serverless o Jobs efímeros con límites de recursos.",
+        "Aumentar particiones del tópico de precios, escalar consumidores con autoscaling por lag y aplicar backpressure en el adaptador de ingesta."
+      ],
+      "criteria": [
+        "LIM-008",
+        "QAS-01",
+        "QAS-02",
+        "QAS-04"
+      ],
+      "effort": "alto"
+    },
+    {
+      "theme": "gestión de secretos",
+      "horizon": "0-30 días",
+      "severity": "Crítico",
+      "actions": [
+        "Rotar las credenciales expuestas, migrarlas a AWS Secrets Manager e integrar gitleaks/trufflehog como gate bloqueante del pipeline.",
+        "Rotar y migrar los secretos a Secrets Manager con inyección en tiempo de ejecución; escanear el historial del repositorio y bloquear nuevos secretos en el pipeline.",
+        "Completar la migración de todos los secretos a Secrets Manager con rotación automática y eliminar los valores en archivos de configuración."
+      ],
+      "criteria": [
+        "ADR-007",
+        "DOD-03",
+        "LIM-006"
+      ],
+      "effort": "bajo"
+    },
+    {
+      "theme": "gobierno arquitectónico",
+      "horizon": "30-90 días",
+      "severity": "Alto",
+      "actions": [
+        "Migrar el inventario de deuda a ítems del backlog con impacto e interés, y revisarlos en la planeación de cada release.",
+        "Formalizar los escenarios de calidad con la plantilla estímulo-respuesta-medida y convertirlos en SLOs monitoreados.",
+        "Ejecutar sesiones de Event Storming con negocio, publicar el glosario ubicuo y alinear nombres de agregados, eventos y APIs con ese glosario.",
+        "Adoptar la plantilla de decisión del Chapter, completar los ADRs faltantes para decisiones ya tomadas y consolidar el SAD como documento vivo.",
+        "Crear el registro de deuda técnica en el backlog con impacto económico e interés, reservar capacidad por sprint para su pago y publicar métricas DORA.",
+        "Realizar Event Storming por contexto faltante y publicar el mapa de capacidades y el glosario en el repositorio de documentación.",
+        "Completar los ADRs faltantes usando la plantilla del Chapter y vincularlos desde el SAD.",
+        "Instrumentar el pipeline para capturar las cuatro métricas DORA y publicarlas en el tablero de ingeniería."
+      ],
+      "criteria": [
+        "DOD-05",
+        "DOD-07",
+        "VAL-06",
+        "VAL-07",
+        "VAL-08",
+        "WF-01",
+        "WF-02",
+        "WF-03"
+      ],
+      "effort": "medio"
+    },
+    {
+      "theme": "capacidad y finops",
+      "horizon": "30-90 días",
+      "severity": "Alto",
+      "actions": [
+        "Activar CloudWatch Anomaly Detection y AWS Budgets con alertas al canal de guardia e integración con el sistema de tickets.",
+        "Definir requests/limits para todos los despliegues vía IaC y bloquear en el pipeline los manifiestos sin cuotas; activar alertas de anomalía de costos.",
+        "Dimensionar el pool según la concurrencia real, aplicar timeouts de adquisición y desviar lecturas calientes a caché.",
+        "Revisar anualmente la decisión local sobre el batch de valoración conforme evolucionen los límites de ejecución Serverless."
+      ],
+      "criteria": [
+        "ADR-008",
+        "LIM-004",
+        "LIM-005",
+        "OBS-04"
+      ],
+      "effort": "bajo"
+    },
+    {
+      "theme": "calidad y validación continua",
+      "horizon": "30-90 días",
+      "severity": "Alto",
+      "actions": [
+        "Codificar fitness functions para la regla de dependencias hexagonal, la prohibición de acceso cruzado a esquemas y los timeouts obligatorios en clientes HTTP.",
+        "Incorporar ArchUnit en los servicios Java y reglas de dependencia en el frontend, ejecutadas en CI/CD.",
+        "Fijar el umbral de cobertura como gate bloqueante en SonarQube y priorizar pruebas en los servicios de valoración y órdenes."
+      ],
+      "criteria": [
+        "DOD-01",
+        "DOD-02",
+        "WF-06"
+      ],
+      "effort": "medio"
+    },
+    {
+      "theme": "devsecops",
+      "horizon": "30-90 días",
+      "severity": "Alto",
+      "actions": [
+        "Remediar las vulnerabilidades altas abiertas, incorporar Trivy para imágenes y Checkov para IaC, y hacer bloqueante el quality gate.",
+        "Hacer bloqueantes los quality gates del pipeline (SAST, secretos, cobertura) y completar la IaC para los componentes que se gestionan manualmente."
+      ],
+      "criteria": [
+        "DOD-04",
+        "WF-05"
+      ],
+      "effort": "medio"
+    },
+    {
+      "theme": "seguridad de red",
+      "horizon": "30-90 días",
+      "severity": "Alto",
+      "actions": [
+        "Evaluar y decidir formalmente (ADR local) la adopción de un mesh o de una alternativa de mTLS administrado, con análisis de costo operativo.",
+        "Adoptar mTLS administrado (service mesh o certificados gestionados) y políticas Zero Trust entre servicios."
+      ],
+      "criteria": [
+        "ADR-003",
+        "LIM-007"
+      ],
+      "effort": "alto"
+    },
+    {
+      "theme": "protección de datos",
+      "horizon": "30-90 días",
+      "severity": "Alto",
+      "actions": [
+        "Aplicar enmascaramiento obligatorio de números de cuenta e identificación en la librería de logging y purgar los registros históricos con PII."
+      ],
+      "criteria": [
+        "OBS-02"
+      ],
+      "effort": "bajo"
+    },
+    {
+      "theme": "seguridad de aplicación",
+      "horizon": "30-90 días",
+      "severity": "Alto",
+      "actions": [
+        "Cerrar los endpoints internos sin autorización, centralizar la política de autorización (OPA o filtro común) y añadir pruebas DAST de autorización al pipeline."
+      ],
+      "criteria": [
+        "QAS-06"
+      ],
+      "effort": "medio"
+    },
+    {
+      "theme": "observabilidad",
+      "horizon": "90-180 días",
+      "severity": "Medio",
+      "actions": [
+        "Completar la instrumentación OpenTelemetry en los servicios y jobs restantes.",
+        "Estandarizar el logging JSON con la librería común en los servicios restantes y propagar el traceId a los jobs batch y consumidores Kafka.",
+        "Completar la adopción de la librería de logging JSON y de OpenTelemetry en todos los servicios y jobs.",
+        "Propagar el contexto de traza en las cabeceras de Kafka y en los jobs batch usando la instrumentación OpenTelemetry.",
+        "Añadir métricas de negocio (portafolios valorados/min, órdenes ejecutadas, valor administrado) y cruzarlas con errores en el tablero.",
+        "Definir SLIs por capacidad de negocio (valoración, órdenes, reportes), fijar SLOs y publicar tableros con presupuesto de error."
+      ],
+      "criteria": [
+        "ADR-009",
+        "DOD-08",
+        "LIM-009",
+        "OBS-01",
+        "OBS-03",
+        "VAL-05"
+      ],
+      "effort": "medio"
+    },
+    {
+      "theme": "diseño evolutivo",
+      "horizon": "90-180 días",
+      "severity": "Medio",
+      "actions": [
+        "Modelar 'Instrumento' como agregado con estrategia de valoración por tipo (patrón Strategy + Factory) y externalizar reglas por instrumento a configuración versionada.",
+        "Definir puntos de extensión explícitos en el dominio (estrategias por tipo de activo, reglas como configuración) y medir el costo de cambio por sprint como métrica arquitectónica.",
+        "Inventariar componentes y abstracciones sin justificación de negocio y retirarlos o consolidarlos; documentar la justificación de los que permanecen."
+      ],
+      "criteria": [
+        "QAS-08",
+        "VAL-01",
+        "VAL-03"
+      ],
+      "effort": "alto"
+    },
+    {
+      "theme": "documentación",
+      "horizon": "90-180 días",
+      "severity": "Medio",
+      "actions": [
+        "Migrar los diagramas de draw.io a Mermaid dentro del repositorio de documentación y eliminar las copias desactualizadas.",
+        "Completar la vista de componentes de los servicios críticos y publicar los contratos de eventos con AsyncAPI.",
+        "Completar la vista de contenedores con el broker, los jobs batch y los protocolos de cada relación."
+      ],
+      "criteria": [
+        "DOC-02",
+        "DOC-03",
+        "WF-04"
+      ],
+      "effort": "medio"
+    },
+    {
+      "theme": "contratos e integración",
+      "horizon": "90-180 días",
+      "severity": "Medio",
+      "actions": [
+        "Publicar especificaciones AsyncAPI para los tópicos de órdenes, precios y valoración, versionadas con SemVer.",
+        "Generar la especificación OpenAPI desde el código en el pipeline y validar el drift contra la publicada; publicar AsyncAPI para los eventos."
+      ],
+      "criteria": [
+        "DOC-04",
+        "DOD-10"
+      ],
+      "effort": "bajo"
+    },
+    {
+      "theme": "arquitectura interna",
+      "horizon": "90-180 días",
+      "severity": "Medio",
+      "actions": [
+        "Aplicar el arquetipo hexagonal del Chapter en los servicios que mezclan dominio e infraestructura y proteger la regla de dependencias con pruebas de arquitectura."
+      ],
+      "criteria": [
+        "VAL-04"
+      ],
+      "effort": "medio"
+    },
+    {
+      "theme": "continuidad del negocio",
+      "horizon": "90-180 días",
+      "severity": "Medio",
+      "actions": [
+        "Pasar de snapshots horarios a replicación continua (réplica de lectura cross-region) y automatizar el runbook de conmutación con ejercicio semestral."
+      ],
+      "criteria": [
+        "QAS-07"
+      ],
+      "effort": "alto"
+    }
+  ]
+}

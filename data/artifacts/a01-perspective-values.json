@@ -1,0 +1,159 @@
+{
+  "id": "A01",
+  "slug": "perspective-engineering-values",
+  "name": "Rúbrica de Perspectiva y Valores de Ingeniería",
+  "kind": "rubric",
+  "scale": "maturity",
+  "is_gate": false,
+  "weight": 0.15,
+  "original_dimension": "Artefacto 1 — Arquitectura",
+  "source": "kb/perspective.md",
+  "purpose": "Medir qué tan alineada está la arquitectura de la solución con la mentalidad, los valores de ingeniería y los 'Dos / Don'ts' del Chapter: dominio primero, trade-offs explícitos, simplicidad y reversibilidad, validación automatizada y medibilidad.",
+  "application": "Cada valor se califica en una escala de madurez 0-4 a partir de evidencia estructural (código, diagramas, ADRs, backlog) y entrevistas con el equipo. El puntaje del artefacto es el promedio ponderado de los niveles.",
+  "criteria": [
+    {
+      "id": "VAL-01",
+      "name": "Evolutividad y agilidad arquitectónica",
+      "description": "Capacidad de incorporar cambios incrementales (nuevos tipos de activo, nuevos canales, nuevas reglas regulatorias) con bajo costo y sin degradar la estructura.",
+      "quality_attributes": ["mantenibilidad", "evolutividad"],
+      "criticality": "media",
+      "theme": "diseño evolutivo",
+      "recommendation": "Definir puntos de extensión explícitos en el dominio (estrategias por tipo de activo, reglas como configuración) y medir el costo de cambio por sprint como métrica arquitectónica.",
+      "effort": "medio",
+      "kb_refs": ["kb/perspective.md", "kb/references/v1/architectural-design-workflow.md"],
+      "maturity_levels": {
+        "0": "El cambio requiere reescritura; no hay puntos de extensión.",
+        "1": "Los cambios se hacen ad hoc y afectan múltiples módulos.",
+        "2": "Existen algunos puntos de extensión pero el cambio típico cruza más de dos servicios.",
+        "3": "El cambio típico se contiene en un servicio; existen abstracciones de dominio para variar.",
+        "4": "El costo de cambio se mide y se optimiza; fitness functions protegen la evolutividad."
+      }
+    },
+    {
+      "id": "VAL-02",
+      "name": "Desacoplamiento y alta cohesión (Bounded Contexts)",
+      "description": "Los componentes tienen responsabilidades alineadas a límites de dominio; no existen dependencias directas entre Bounded Contexts ni datos compartidos.",
+      "quality_attributes": ["mantenibilidad", "escalabilidad"],
+      "criticality": "alta",
+      "theme": "datos y acoplamiento",
+      "recommendation": "Formalizar el mapa de contextos (Context Map) con relaciones explícitas y eliminar el acceso directo a datos de otros contextos mediante APIs o eventos.",
+      "effort": "alto",
+      "kb_refs": ["kb/perspective.md", "kb/limits/v1/002-shared-database-monolith.md"],
+      "maturity_levels": {
+        "0": "Monolito sin límites de dominio.",
+        "1": "Servicios separados pero con acoplamiento por base de datos y llamadas cruzadas.",
+        "2": "Contextos identificados; persisten algunos acoplamientos por datos compartidos.",
+        "3": "Cada contexto es dueño de sus datos; integración por contratos y eventos.",
+        "4": "Context Map gobernado, con pruebas de arquitectura que impiden dependencias indebidas."
+      }
+    },
+    {
+      "id": "VAL-03",
+      "name": "Simplicidad esencial",
+      "description": "No existe complejidad técnica ni abstracción que no esté justificada por una necesidad de negocio o por habilitar cambio.",
+      "quality_attributes": ["mantenibilidad"],
+      "criticality": "baja",
+      "theme": "diseño evolutivo",
+      "recommendation": "Inventariar componentes y abstracciones sin justificación de negocio y retirarlos o consolidarlos; documentar la justificación de los que permanecen.",
+      "effort": "bajo",
+      "kb_refs": ["kb/perspective.md"],
+      "maturity_levels": {
+        "0": "Complejidad accidental generalizada.",
+        "1": "Múltiples abstracciones y componentes sin uso claro.",
+        "2": "Complejidad razonable con focos de sobre-ingeniería identificados.",
+        "3": "Cada componente tiene una razón de negocio documentada.",
+        "4": "Se revisa periódicamente la complejidad y se elimina de forma activa."
+      }
+    },
+    {
+      "id": "VAL-04",
+      "name": "Independencia tecnológica (Clean / Hexagonal)",
+      "description": "La lógica de negocio está aislada de frameworks, bases de datos e interfaces; las dependencias apuntan hacia el dominio.",
+      "quality_attributes": ["mantenibilidad", "portabilidad"],
+      "criticality": "media",
+      "theme": "arquitectura interna",
+      "recommendation": "Aplicar el arquetipo hexagonal del Chapter en los servicios que mezclan dominio e infraestructura y proteger la regla de dependencias con pruebas de arquitectura.",
+      "effort": "medio",
+      "kb_refs": ["kb/perspective.md", "kb/references/v1/architecture-definition-of-done.md"],
+      "maturity_levels": {
+        "0": "Lógica de negocio embebida en controladores y repositorios.",
+        "1": "Capas nominales pero con fugas de framework al dominio.",
+        "2": "La mayoría de servicios aplica puertos y adaptadores; hay excepciones.",
+        "3": "Todos los servicios aplican el patrón; el dominio no depende de infraestructura.",
+        "4": "La regla de dependencias se valida automáticamente en CI/CD."
+      }
+    },
+    {
+      "id": "VAL-05",
+      "name": "Observabilidad y medibilidad (SLIs / SLOs)",
+      "description": "La arquitectura permite medir sus atributos en ejecución mediante SLIs/SLOs que hacen visible el impacto en el negocio.",
+      "quality_attributes": ["observabilidad", "operabilidad"],
+      "criticality": "media",
+      "theme": "observabilidad",
+      "recommendation": "Definir SLIs por capacidad de negocio (valoración, órdenes, reportes), fijar SLOs y publicar tableros con presupuesto de error.",
+      "effort": "medio",
+      "kb_refs": ["kb/perspective.md", "kb/decisions/v1/009-observability-full-stack.md"],
+      "maturity_levels": {
+        "0": "No hay métricas.",
+        "1": "Métricas técnicas aisladas sin objetivos.",
+        "2": "Métricas técnicas con algunos objetivos informales.",
+        "3": "SLIs/SLOs definidos para las capacidades críticas y monitoreados.",
+        "4": "SLOs con presupuesto de error que gobiernan las decisiones de liberación."
+      }
+    },
+    {
+      "id": "VAL-06",
+      "name": "El dominio dicta las reglas (DDD y lenguaje ubicuo)",
+      "description": "El modelo de software refleja el dominio de inversiones (portafolio, posición, orden, valoración, instrumento) con lenguaje ubicuo compartido con el negocio.",
+      "quality_attributes": ["mantenibilidad", "alineación con negocio"],
+      "criticality": "media",
+      "theme": "gobierno arquitectónico",
+      "recommendation": "Ejecutar sesiones de Event Storming con negocio, publicar el glosario ubicuo y alinear nombres de agregados, eventos y APIs con ese glosario.",
+      "effort": "medio",
+      "kb_refs": ["kb/perspective.md", "kb/references/v1/architectural-design-workflow.md"],
+      "maturity_levels": {
+        "0": "Modelo orientado a tablas o a la tecnología.",
+        "1": "Términos de negocio inconsistentes entre equipos y código.",
+        "2": "Glosario parcial; agregados identificados en los contextos principales.",
+        "3": "Lenguaje ubicuo documentado y reflejado en código, eventos y APIs.",
+        "4": "El modelo evoluciona con el negocio mediante talleres periódicos."
+      }
+    },
+    {
+      "id": "VAL-07",
+      "name": "Decisiones formales con trade-offs explícitos (ADRs y SAD)",
+      "description": "Las decisiones estratégicas están registradas en ADRs con alternativas, trade-offs y riesgos, y consolidadas en un SAD.",
+      "quality_attributes": ["gobierno", "mantenibilidad"],
+      "criticality": "media",
+      "theme": "gobierno arquitectónico",
+      "recommendation": "Adoptar la plantilla de decisión del Chapter, completar los ADRs faltantes para decisiones ya tomadas y consolidar el SAD como documento vivo.",
+      "effort": "bajo",
+      "kb_refs": ["kb/perspective.md", "tools/templates/kb/decision.md.template"],
+      "maturity_levels": {
+        "0": "No hay registro de decisiones.",
+        "1": "Decisiones en correos o chats; sin alternativas ni costos.",
+        "2": "ADRs para algunas decisiones; sin trade-offs explícitos.",
+        "3": "ADRs con plantilla estándar para todas las decisiones clave y SAD consolidado.",
+        "4": "ADRs revisados periódicamente; decisiones reversibles identificadas y postergadas a propósito."
+      }
+    },
+    {
+      "id": "VAL-08",
+      "name": "Gestión activa y visible de la deuda técnica",
+      "description": "La deuda técnica está registrada en el backlog con impacto e interés, alineada al roadmap y visibilizada con métricas DORA.",
+      "quality_attributes": ["mantenibilidad", "gobierno"],
+      "criticality": "media",
+      "theme": "gobierno arquitectónico",
+      "recommendation": "Crear el registro de deuda técnica en el backlog con impacto económico e interés, reservar capacidad por sprint para su pago y publicar métricas DORA.",
+      "effort": "bajo",
+      "kb_refs": ["kb/perspective.md", "kb/references/v1/architecture-definition-of-done.md"],
+      "maturity_levels": {
+        "0": "Deuda desconocida.",
+        "1": "Deuda conocida informalmente por el equipo.",
+        "2": "Deuda documentada fuera del backlog, sin priorización ni capacidad asignada.",
+        "3": "Deuda en el backlog con impacto e interés y capacidad reservada.",
+        "4": "Deuda gestionada con métricas DORA y revisada con negocio en el roadmap."
+      }
+    }
+  ]
+}

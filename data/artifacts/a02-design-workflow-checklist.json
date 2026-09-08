@@ -1,0 +1,81 @@
+{
+  "id": "A02",
+  "slug": "architectural-design-workflow-checklist",
+  "name": "Checklist del Flujo de Diseño Arquitectónico",
+  "kind": "checklist",
+  "scale": "boolean",
+  "is_gate": false,
+  "weight": 0.10,
+  "original_dimension": "Artefacto 1 — Arquitectura",
+  "source": "kb/references/v1/architectural-design-workflow.md",
+  "purpose": "Verificar que la solución fue concebida y evoluciona siguiendo las tres fases del flujo de diseño del Chapter (descubrimiento y alto nivel, diseño detallado y habilitación, verificación continua) y que existen los entregables de cada fase.",
+  "application": "Cada ítem del checklist se marca como pass, partial o fail según la existencia y calidad de los entregables (capacidades de negocio, ASRs con SLOs, ADRs, vistas C4, IaC y quality gates, fitness functions).",
+  "criteria": [
+    {
+      "id": "WF-01",
+      "name": "Capacidades de negocio y lenguaje ubicuo documentados",
+      "description": "Existen talleres de visión compartida (Event Storming) y documentación de capacidades, alcance, restricciones y dominios preliminares (agregados, eventos, comandos).",
+      "quality_attributes": ["alineación con negocio", "mantenibilidad"],
+      "criticality": "media",
+      "theme": "gobierno arquitectónico",
+      "recommendation": "Realizar Event Storming por contexto faltante y publicar el mapa de capacidades y el glosario en el repositorio de documentación.",
+      "effort": "medio",
+      "kb_refs": ["kb/references/v1/architectural-design-workflow.md"]
+    },
+    {
+      "id": "WF-02",
+      "name": "Atributos de calidad (ASRs) con métricas y SLOs",
+      "description": "Se ejecutó un Quality Attributes Workshop y los escenarios de calidad tienen métricas exactas y SLOs.",
+      "quality_attributes": ["rendimiento", "escalabilidad", "disponibilidad"],
+      "criticality": "alta",
+      "theme": "gobierno arquitectónico",
+      "recommendation": "Formalizar los escenarios de calidad con la plantilla estímulo-respuesta-medida y convertirlos en SLOs monitoreados.",
+      "effort": "bajo",
+      "kb_refs": ["kb/references/v1/architectural-design-workflow.md"]
+    },
+    {
+      "id": "WF-03",
+      "name": "ADRs explícitos para las decisiones clave",
+      "description": "El estilo arquitectónico, la persistencia, la integración y la infraestructura están respaldados por ADRs con trade-offs técnicos y económicos.",
+      "quality_attributes": ["gobierno"],
+      "criticality": "media",
+      "theme": "gobierno arquitectónico",
+      "recommendation": "Completar los ADRs faltantes usando la plantilla del Chapter y vincularlos desde el SAD.",
+      "effort": "bajo",
+      "kb_refs": ["kb/references/v1/architectural-design-workflow.md", "tools/templates/kb/decision.md.template"]
+    },
+    {
+      "id": "WF-04",
+      "name": "Vistas C4 estandarizadas y contratos API-First",
+      "description": "Existen vistas de contexto, contenedores y componentes en el estándar del Chapter, y los contratos de servicio y eventos se diseñaron antes de la implementación.",
+      "quality_attributes": ["mantenibilidad", "interoperabilidad"],
+      "criticality": "media",
+      "theme": "documentación",
+      "recommendation": "Completar la vista de componentes de los servicios críticos y publicar los contratos de eventos con AsyncAPI.",
+      "effort": "medio",
+      "kb_refs": ["kb/references/v1/documentation-and-diagramming-standard.md"]
+    },
+    {
+      "id": "WF-05",
+      "name": "Diseño de infraestructura y DevSecOps (IaC, topología, quality gates)",
+      "description": "La topología de red, las zonas de seguridad y la estrategia de despliegue están definidas; la infraestructura está como código y el pipeline incluye quality gates planificados.",
+      "quality_attributes": ["seguridad", "operabilidad"],
+      "criticality": "media",
+      "theme": "devsecops",
+      "recommendation": "Hacer bloqueantes los quality gates del pipeline (SAST, secretos, cobertura) y completar la IaC para los componentes que se gestionan manualmente.",
+      "effort": "medio",
+      "kb_refs": ["kb/references/v1/architectural-design-workflow.md"]
+    },
+    {
+      "id": "WF-06",
+      "name": "Verificación continua: fitness functions y deuda en el backlog",
+      "description": "Durante los sprints se codifican fitness functions que validan reglas arquitectónicas y se gestiona activamente la deuda técnica.",
+      "quality_attributes": ["mantenibilidad", "evolutividad"],
+      "criticality": "media",
+      "theme": "calidad y validación continua",
+      "recommendation": "Incorporar ArchUnit en los servicios Java y reglas de dependencia en el frontend, ejecutadas en CI/CD.",
+      "effort": "medio",
+      "kb_refs": ["kb/references/v1/architectural-design-workflow.md", "kb/references/v1/architecture-definition-of-done.md"]
+    }
+  ]
+}

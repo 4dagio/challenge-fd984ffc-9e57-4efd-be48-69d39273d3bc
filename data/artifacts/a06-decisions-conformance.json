@@ -1,0 +1,114 @@
+{
+  "id": "A06",
+  "slug": "architecture-decisions-conformance",
+  "name": "Conformidad con las Decisiones del Chapter (ADRs)",
+  "kind": "conformance",
+  "scale": "conformance",
+  "is_gate": false,
+  "weight": 0.10,
+  "original_dimension": "Artefacto 1 — Arquitectura (alineación institucional)",
+  "source": "kb/decisions/v1/ (9 decisiones aprobadas del Chapter)",
+  "purpose": "Verificar que la solución sigue las decisiones arquitectónicas aprobadas por el Chapter y, cuando se desvía, que la desviación está justificada en un ADR local con trade-offs explícitos. Una desviación justificada es aceptable; una desviación silenciosa no lo es.",
+  "application": "Para cada decisión institucional se contrasta la implementación real. Estados: aligned (cumple), justified-deviation (se desvía con ADR local aprobado), partial (cumple parcialmente), unjustified-deviation (se desvía sin registro).",
+  "criteria": [
+    {
+      "id": "ADR-001",
+      "name": "Comunicación asíncrona como patrón dominante",
+      "description": "Integración entre servicios desacoplados mediante eventos o colas; comunicación síncrona solo donde el negocio requiere respuesta inmediata.",
+      "quality_attributes": ["resiliencia", "escalabilidad"],
+      "criticality": "media",
+      "theme": "contratos e integración",
+      "recommendation": "Mantener la integración por eventos y documentar los casos síncronos con su justificación de negocio.",
+      "effort": "bajo",
+      "kb_refs": ["kb/decisions/v1/001-asynchronous-communication.md"]
+    },
+    {
+      "id": "ADR-002",
+      "name": "Uso de bases NoSQL y Database-per-service",
+      "description": "Cada Bounded Context es dueño exclusivo de su persistencia; se prohíbe compartir bases de datos.",
+      "quality_attributes": ["escalabilidad", "mantenibilidad"],
+      "criticality": "alta",
+      "theme": "datos y acoplamiento",
+      "recommendation": "Registrar un ADR local que fije el plan de separación del esquema compartido y ejecutarlo mediante proyecciones por eventos.",
+      "effort": "alto",
+      "kb_refs": ["kb/decisions/v1/002-nosql-databases-usage.md", "kb/limits/v1/002-shared-database-monolith.md"]
+    },
+    {
+      "id": "ADR-003",
+      "name": "Adopción de Service Mesh en ecosistemas críticos",
+      "description": "Service Mesh para microservicios críticos de alta complejidad operativa (mTLS, reintentos, observabilidad de red centralizados).",
+      "quality_attributes": ["seguridad", "operabilidad"],
+      "criticality": "media",
+      "theme": "seguridad de red",
+      "recommendation": "Evaluar y decidir formalmente (ADR local) la adopción de un mesh o de una alternativa de mTLS administrado, con análisis de costo operativo.",
+      "effort": "alto",
+      "kb_refs": ["kb/decisions/v1/003-service-mesh-adoption.md"]
+    },
+    {
+      "id": "ADR-004",
+      "name": "Estrategia de caché (Cache-aside / Write-through)",
+      "description": "Cache-aside por defecto; Write-through donde la consistencia estricta es obligatoria.",
+      "quality_attributes": ["rendimiento"],
+      "criticality": "baja",
+      "theme": "rendimiento y escalabilidad",
+      "recommendation": "Documentar la política de invalidación y el TTL por tipo de dato en el SAD.",
+      "effort": "bajo",
+      "kb_refs": ["kb/decisions/v1/004-caching-strategy.md"]
+    },
+    {
+      "id": "ADR-005",
+      "name": "Estándar híbrido de protocolos (REST / gRPC / eventos)",
+      "description": "REST para APIs públicas, gRPC para comunicación interna de baja latencia y eventos para workflows distribuidos.",
+      "quality_attributes": ["interoperabilidad", "rendimiento"],
+      "criticality": "baja",
+      "theme": "contratos e integración",
+      "recommendation": "Mantener el estándar y publicar los contratos gRPC y de eventos en el catálogo de APIs.",
+      "effort": "bajo",
+      "kb_refs": ["kb/decisions/v1/005-communication-protocols-standard.md"]
+    },
+    {
+      "id": "ADR-006",
+      "name": "Persistencia políglota por Bounded Context",
+      "description": "SQL para modelos estructurados con consistencia fuerte y NoSQL para datos flexibles, aislados por contexto.",
+      "quality_attributes": ["escalabilidad", "mantenibilidad"],
+      "criticality": "media",
+      "theme": "datos y acoplamiento",
+      "recommendation": "Documentar la estrategia de consistencia eventual entre motores y las responsabilidades de respaldo por motor.",
+      "effort": "bajo",
+      "kb_refs": ["kb/decisions/v1/006-persistence-polyglot-strategy.md"]
+    },
+    {
+      "id": "ADR-007",
+      "name": "Gobierno de secretos con Secret Manager / Vault",
+      "description": "Secret Manager o Vault como única fuente de verdad; variables de entorno solo como tránsito.",
+      "quality_attributes": ["seguridad", "cumplimiento"],
+      "criticality": "alta",
+      "theme": "gestión de secretos",
+      "recommendation": "Completar la migración de todos los secretos a Secrets Manager con rotación automática y eliminar los valores en archivos de configuración.",
+      "effort": "bajo",
+      "kb_refs": ["kb/decisions/v1/007-secrets-management-governance.md"]
+    },
+    {
+      "id": "ADR-008",
+      "name": "Elección de arquitectura de despliegue (Kubernetes vs Serverless)",
+      "description": "Kubernetes para cargas complejas o persistentes; Serverless para cargas intermitentes, variables y event-driven.",
+      "quality_attributes": ["finops", "escalabilidad"],
+      "criticality": "baja",
+      "theme": "capacidad y finops",
+      "recommendation": "Revisar anualmente la decisión local sobre el batch de valoración conforme evolucionen los límites de ejecución Serverless.",
+      "effort": "bajo",
+      "kb_refs": ["kb/decisions/v1/008-deployment-architecture-choice.md"]
+    },
+    {
+      "id": "ADR-009",
+      "name": "Observabilidad de pila completa",
+      "description": "Logs JSON centralizados, métricas RED y trazabilidad distribuida con OpenTelemetry y correlation IDs.",
+      "quality_attributes": ["observabilidad"],
+      "criticality": "media",
+      "theme": "observabilidad",
+      "recommendation": "Completar la instrumentación OpenTelemetry en los servicios y jobs restantes.",
+      "effort": "medio",
+      "kb_refs": ["kb/decisions/v1/009-observability-full-stack.md"]
+    }
+  ]
+}

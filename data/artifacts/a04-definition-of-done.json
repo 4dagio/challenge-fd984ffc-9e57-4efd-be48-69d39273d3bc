@@ -1,0 +1,125 @@
+{
+  "id": "A04",
+  "slug": "architecture-definition-of-done",
+  "name": "Definition of Done de Arquitectura y Calidad",
+  "kind": "gate",
+  "scale": "boolean",
+  "is_gate": true,
+  "weight": 0.15,
+  "original_dimension": "Artefacto 1 y 3 — Arquitectura y Seguridad (quality gate transversal)",
+  "source": "kb/references/v1/architecture-definition-of-done.md",
+  "purpose": "Actuar como quality gate innegociable: las 10 verificaciones obligatorias que determinan si un diseño o incremento de arquitectura está realmente 'terminado' y listo para operar en producción.",
+  "application": "Cada verificación se marca pass, partial o fail con la evidencia del pipeline, el código y los tableros. El gate solo se supera si las 10 verificaciones están en pass; cualquier fail en una verificación de alta criticidad es bloqueante.",
+  "criteria": [
+    {
+      "id": "DOD-01",
+      "name": "Validación continua (fitness functions)",
+      "description": "Toda regla arquitectónica crítica está cubierta por un test automatizado (ArchUnit, NetArchTest) en CI/CD que falla la compilación ante violaciones.",
+      "quality_attributes": ["mantenibilidad", "evolutividad"],
+      "criticality": "media",
+      "theme": "calidad y validación continua",
+      "recommendation": "Codificar fitness functions para la regla de dependencias hexagonal, la prohibición de acceso cruzado a esquemas y los timeouts obligatorios en clientes HTTP.",
+      "effort": "medio",
+      "kb_refs": ["kb/references/v1/architecture-definition-of-done.md"]
+    },
+    {
+      "id": "DOD-02",
+      "name": "Cobertura mínima de pruebas del 80%",
+      "description": "Cobertura ≥ 80% en pruebas unitarias e integración que cubren caminos felices y manejo defensivo de excepciones.",
+      "quality_attributes": ["mantenibilidad", "confiabilidad"],
+      "criticality": "media",
+      "theme": "calidad y validación continua",
+      "recommendation": "Fijar el umbral de cobertura como gate bloqueante en SonarQube y priorizar pruebas en los servicios de valoración y órdenes.",
+      "effort": "medio",
+      "kb_refs": ["kb/references/v1/architecture-definition-of-done.md"]
+    },
+    {
+      "id": "DOD-03",
+      "name": "Seguridad y gestión de secretos (DevSecOps)",
+      "description": "Un linter en el pipeline valida que no hay información sensible en el código; todos los secretos se consumen desde un vault centralizado.",
+      "quality_attributes": ["seguridad"],
+      "criticality": "alta",
+      "theme": "gestión de secretos",
+      "recommendation": "Rotar las credenciales expuestas, migrarlas a AWS Secrets Manager e integrar gitleaks/trufflehog como gate bloqueante del pipeline.",
+      "effort": "bajo",
+      "kb_refs": ["kb/limits/v1/006-secrets-exposure.md", "kb/decisions/v1/007-secrets-management-governance.md"]
+    },
+    {
+      "id": "DOD-04",
+      "name": "Análisis estático (SAST) limpio",
+      "description": "Código e IaC escaneados (SonarQube, Trivy, Checkov) con cero vulnerabilidades críticas o altas y cero code smells estructurales nuevos.",
+      "quality_attributes": ["seguridad", "mantenibilidad"],
+      "criticality": "alta",
+      "theme": "devsecops",
+      "recommendation": "Remediar las vulnerabilidades altas abiertas, incorporar Trivy para imágenes y Checkov para IaC, y hacer bloqueante el quality gate.",
+      "effort": "medio",
+      "kb_refs": ["kb/references/v1/architecture-definition-of-done.md"]
+    },
+    {
+      "id": "DOD-05",
+      "name": "Métricas DORA y observabilidad de CI/CD",
+      "description": "El pipeline mide Deployment Frequency, Lead Time for Changes, MTTR y Change Failure Rate.",
+      "quality_attributes": ["operabilidad", "gobierno"],
+      "criticality": "baja",
+      "theme": "gobierno arquitectónico",
+      "recommendation": "Instrumentar el pipeline para capturar las cuatro métricas DORA y publicarlas en el tablero de ingeniería.",
+      "effort": "bajo",
+      "kb_refs": ["kb/references/v1/architecture-definition-of-done.md"]
+    },
+    {
+      "id": "DOD-06",
+      "name": "Tolerancia a fallos y rendimiento",
+      "description": "Los puntos de integración incluyen circuit breakers y timeouts explícitos; existen pruebas de carga (K6/JMeter) que aprueban el throughput esperado con p95 < 2 s.",
+      "quality_attributes": ["resiliencia", "rendimiento"],
+      "criticality": "alta",
+      "theme": "resiliencia",
+      "recommendation": "Extender Circuit Breaker y timeouts a todos los clientes salientes (datos de mercado, custodio, core) y automatizar las pruebas de carga en el pipeline de pre-producción.",
+      "effort": "medio",
+      "kb_refs": ["kb/limits/v1/001-cascading-failures.md"]
+    },
+    {
+      "id": "DOD-07",
+      "name": "Gestión transparente de la deuda técnica",
+      "description": "Toda deuda técnica nueva está registrada en el backlog con su impacto económico e interés.",
+      "quality_attributes": ["mantenibilidad", "gobierno"],
+      "criticality": "media",
+      "theme": "gobierno arquitectónico",
+      "recommendation": "Migrar el inventario de deuda a ítems del backlog con impacto e interés, y revisarlos en la planeación de cada release.",
+      "effort": "bajo",
+      "kb_refs": ["kb/references/v1/architecture-definition-of-done.md"]
+    },
+    {
+      "id": "DOD-08",
+      "name": "Trazabilidad de observabilidad",
+      "description": "Logs estructurados en JSON con traceId y correlationId globales; endpoints de health check disponibles.",
+      "quality_attributes": ["observabilidad"],
+      "criticality": "media",
+      "theme": "observabilidad",
+      "recommendation": "Estandarizar el logging JSON con la librería común en los servicios restantes y propagar el traceId a los jobs batch y consumidores Kafka.",
+      "effort": "medio",
+      "kb_refs": ["kb/limits/v1/009-insufficient-observability.md"]
+    },
+    {
+      "id": "DOD-09",
+      "name": "Aprobación de code review y seguridad",
+      "description": "El pull request fue validado por un par técnico (y/o IA) garantizando SOLID, Clean Code y la arquitectura limpia acordada.",
+      "quality_attributes": ["mantenibilidad"],
+      "criticality": "baja",
+      "theme": "calidad y validación continua",
+      "recommendation": "Mantener la política de revisión obligatoria y añadir una lista de verificación arquitectónica en la plantilla de PR.",
+      "effort": "bajo",
+      "kb_refs": ["kb/references/v1/architecture-definition-of-done.md"]
+    },
+    {
+      "id": "DOD-10",
+      "name": "Contratos e interoperabilidad estricta",
+      "description": "Servicios con contratos backward compatible, APIs versionadas y documentación OpenAPI que refleja el estado exacto del código.",
+      "quality_attributes": ["interoperabilidad", "mantenibilidad"],
+      "criticality": "media",
+      "theme": "contratos e integración",
+      "recommendation": "Generar la especificación OpenAPI desde el código en el pipeline y validar el drift contra la publicada; publicar AsyncAPI para los eventos.",
+      "effort": "bajo",
+      "kb_refs": ["kb/limits/v1/003-fragile-contracts.md"]
+    }
+  ]
+}

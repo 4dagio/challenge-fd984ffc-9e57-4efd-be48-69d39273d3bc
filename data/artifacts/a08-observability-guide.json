@@ -1,0 +1,59 @@
+{
+  "id": "A08",
+  "slug": "observability-implementation-guide",
+  "name": "Guía de Implementación de Observabilidad",
+  "kind": "checklist",
+  "scale": "boolean",
+  "is_gate": false,
+  "weight": 0.10,
+  "original_dimension": "Artefacto 2 y 3 — Escalabilidad y Seguridad (operación y protección de datos)",
+  "source": "kb/references/v1/observability-implementation-guide.md",
+  "purpose": "Verificar que la solución elimina la 'ceguera operacional': trazabilidad distribuida extremo a extremo, logging JSON centralizado sin datos sensibles, métricas técnicas y de negocio en tableros, y alertamiento con control de anomalías y de presupuesto.",
+  "application": "Se aplican los cuatro puntos del checklist de la guía revisando la configuración de instrumentación, muestras de logs, tableros y reglas de alertas.",
+  "criteria": [
+    {
+      "id": "OBS-01",
+      "name": "correlationId / traceId íntegro de extremo a extremo",
+      "description": "Todo request del frontend o móvil inyecta un traceId que se propaga por gateway, servicios, broker, jobs y base de datos.",
+      "quality_attributes": ["observabilidad"],
+      "criticality": "media",
+      "theme": "observabilidad",
+      "recommendation": "Propagar el contexto de traza en las cabeceras de Kafka y en los jobs batch usando la instrumentación OpenTelemetry.",
+      "effort": "medio",
+      "kb_refs": ["kb/references/v1/observability-implementation-guide.md"]
+    },
+    {
+      "id": "OBS-02",
+      "name": "Logs 100% JSON, sin PII ni datos bancarios, centralizados",
+      "description": "Todos los logs son JSON con campos obligatorios, enmascaran PII y datos financieros y residen en un almacenamiento central.",
+      "quality_attributes": ["observabilidad", "seguridad", "cumplimiento"],
+      "criticality": "alta",
+      "theme": "protección de datos",
+      "recommendation": "Aplicar enmascaramiento obligatorio de números de cuenta e identificación en la librería de logging y purgar los registros históricos con PII.",
+      "effort": "bajo",
+      "kb_refs": ["kb/references/v1/observability-implementation-guide.md", "kb/limits/v1/009-insufficient-observability.md"]
+    },
+    {
+      "id": "OBS-03",
+      "name": "Métricas RED/USE y KPIs de negocio en tableros",
+      "description": "Métricas técnicas (RED para servicios, USE para infraestructura) y KPIs de negocio consolidados en tableros para equipos técnicos y de negocio.",
+      "quality_attributes": ["observabilidad", "operabilidad"],
+      "criticality": "media",
+      "theme": "observabilidad",
+      "recommendation": "Añadir métricas de negocio (portafolios valorados/min, órdenes ejecutadas, valor administrado) y cruzarlas con errores en el tablero.",
+      "effort": "bajo",
+      "kb_refs": ["kb/references/v1/observability-implementation-guide.md"]
+    },
+    {
+      "id": "OBS-04",
+      "name": "Alertas de anomalías y topes de presupuesto (FinOps)",
+      "description": "Existen alarmas de anomalías de uso (ML) y alertas de presupuesto de nube, con throttling de alertas e integración a ITSM.",
+      "quality_attributes": ["operabilidad", "finops"],
+      "criticality": "media",
+      "theme": "capacidad y finops",
+      "recommendation": "Activar CloudWatch Anomaly Detection y AWS Budgets con alertas al canal de guardia e integración con el sistema de tickets.",
+      "effort": "bajo",
+      "kb_refs": ["kb/references/v1/observability-implementation-guide.md", "kb/limits/v1/004-resource-exhaustion.md"]
+    }
+  ]
+}

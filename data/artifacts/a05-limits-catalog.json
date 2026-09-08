@@ -1,0 +1,125 @@
+{
+  "id": "A05",
+  "slug": "architecture-limits-catalog",
+  "name": "Catálogo de Límites y Anti-patrones",
+  "kind": "risk-catalog",
+  "scale": "tristate",
+  "is_gate": false,
+  "weight": 0.15,
+  "original_dimension": "Artefacto 2 y 3 — Escalabilidad y Seguridad (riesgos técnicos)",
+  "source": "kb/limits/v1/ (10 límites del Chapter)",
+  "purpose": "Detectar en la solución las restricciones innegociables del Chapter (fallos en cascada, base de datos compartida, contratos frágiles, agotamiento de recursos, saturación de pools, secretos expuestos, ausencia de mTLS, falta de backpressure, ceguera operacional y tormentas de reintentos), usando las señales de alerta de cada límite como guía de inspección.",
+  "application": "Para cada límite se busca su 'contexto de identificación' y sus 'señales de alerta' en código, configuración, topología e incidentes. Se clasifica como compliant, at-risk (señales tempranas) o violated (restricción incumplida). Todo límite violado es bloqueante para producción.",
+  "criteria": [
+    {
+      "id": "LIM-001",
+      "name": "Fallos en cascada por timeouts y falta de Circuit Breaker",
+      "description": "Integraciones síncronas sin timeouts explícitos ni Circuit Breaker; latencia excesiva tratada como fallo (p95 < 2 s).",
+      "quality_attributes": ["resiliencia", "disponibilidad"],
+      "criticality": "alta",
+      "theme": "resiliencia",
+      "recommendation": "Configurar timeouts agresivos y Circuit Breaker con fallback en todos los clientes salientes; aislar pools con Bulkheads.",
+      "effort": "medio",
+      "kb_refs": ["kb/limits/v1/001-cascading-failures.md", "kb/decisions/v1/001-asynchronous-communication.md"]
+    },
+    {
+      "id": "LIM-002",
+      "name": "Monolito distribuido por base de datos compartida",
+      "description": "Múltiples servicios de distintos Bounded Contexts acceden a la misma base de datos o esquema.",
+      "quality_attributes": ["escalabilidad", "mantenibilidad"],
+      "criticality": "alta",
+      "theme": "datos y acoplamiento",
+      "recommendation": "Separar el esquema de reportería con una proyección propia alimentada por eventos (CQRS) y retirar el acceso directo entre servicios.",
+      "effort": "alto",
+      "kb_refs": ["kb/limits/v1/002-shared-database-monolith.md", "kb/decisions/v1/006-persistence-polyglot-strategy.md"]
+    },
+    {
+      "id": "LIM-003",
+      "name": "Monolito distribuido por contratos frágiles",
+      "description": "Cambios de contrato sin backward compatibility ni versionado semántico.",
+      "quality_attributes": ["interoperabilidad", "mantenibilidad"],
+      "criticality": "media",
+      "theme": "contratos e integración",
+      "recommendation": "Mantener pruebas de contrato (Pact) y patrón Tolerant Reader; versionar eventos y APIs con SemVer.",
+      "effort": "bajo",
+      "kb_refs": ["kb/limits/v1/003-fragile-contracts.md", "kb/decisions/v1/005-communication-protocols-standard.md"]
+    },
+    {
+      "id": "LIM-004",
+      "name": "Hambre de recursos (Resource Exhaustion)",
+      "description": "Contenedores desplegados sin requests y limits de CPU y memoria; ausencia de alertas de anomalías de costo.",
+      "quality_attributes": ["escalabilidad", "finops"],
+      "criticality": "media",
+      "theme": "capacidad y finops",
+      "recommendation": "Definir requests/limits para todos los despliegues vía IaC y bloquear en el pipeline los manifiestos sin cuotas; activar alertas de anomalía de costos.",
+      "effort": "bajo",
+      "kb_refs": ["kb/limits/v1/004-resource-exhaustion.md", "kb/decisions/v1/008-deployment-architecture-choice.md"]
+    },
+    {
+      "id": "LIM-005",
+      "name": "Saturación de pools de conexión",
+      "description": "Gestión de conexiones sin límites máximos ni cierre garantizado; sin caché que alivie la presión de lectura.",
+      "quality_attributes": ["rendimiento", "disponibilidad"],
+      "criticality": "media",
+      "theme": "capacidad y finops",
+      "recommendation": "Dimensionar el pool según la concurrencia real, aplicar timeouts de adquisición y desviar lecturas calientes a caché.",
+      "effort": "bajo",
+      "kb_refs": ["kb/limits/v1/005-connection-pool-saturation.md", "kb/decisions/v1/004-caching-strategy.md"]
+    },
+    {
+      "id": "LIM-006",
+      "name": "Brechas de seguridad por secretos en código",
+      "description": "Contraseñas, API keys o tokens en repositorios, imágenes o configuración en texto plano.",
+      "quality_attributes": ["seguridad", "cumplimiento"],
+      "criticality": "alta",
+      "theme": "gestión de secretos",
+      "recommendation": "Rotar y migrar los secretos a Secrets Manager con inyección en tiempo de ejecución; escanear el historial del repositorio y bloquear nuevos secretos en el pipeline.",
+      "effort": "bajo",
+      "kb_refs": ["kb/limits/v1/006-secrets-exposure.md", "kb/decisions/v1/007-secrets-management-governance.md"]
+    },
+    {
+      "id": "LIM-007",
+      "name": "Falta de validación de identidad (sin mTLS)",
+      "description": "Comunicación interna entre servicios asumiendo red confiable, sin autenticación mutua ni cifrado en tránsito.",
+      "quality_attributes": ["seguridad"],
+      "criticality": "alta",
+      "theme": "seguridad de red",
+      "recommendation": "Adoptar mTLS administrado (service mesh o certificados gestionados) y políticas Zero Trust entre servicios.",
+      "effort": "alto",
+      "kb_refs": ["kb/limits/v1/007-missing-mtls-identity.md", "kb/decisions/v1/003-service-mesh-adoption.md"]
+    },
+    {
+      "id": "LIM-008",
+      "name": "Falta de backpressure",
+      "description": "Flujos intensivos sin mecanismos de contrapresión ni rate limiting; sin respuestas fail-fast (HTTP 429).",
+      "quality_attributes": ["escalabilidad", "resiliencia"],
+      "criticality": "alta",
+      "theme": "rendimiento y escalabilidad",
+      "recommendation": "Implementar rate limiting en el borde, control de lag en consumidores Kafka y buffers elásticos con DLQ para la valoración.",
+      "effort": "medio",
+      "kb_refs": ["kb/limits/v1/008-missing-backpressure.md", "kb/decisions/v1/001-asynchronous-communication.md"]
+    },
+    {
+      "id": "LIM-009",
+      "name": "Logging insuficiente (ceguera operacional)",
+      "description": "Logs sin estructura JSON, sin traceId/correlationId y sin centralización.",
+      "quality_attributes": ["observabilidad"],
+      "criticality": "media",
+      "theme": "observabilidad",
+      "recommendation": "Completar la adopción de la librería de logging JSON y de OpenTelemetry en todos los servicios y jobs.",
+      "effort": "medio",
+      "kb_refs": ["kb/limits/v1/009-insufficient-observability.md", "kb/decisions/v1/009-observability-full-stack.md"]
+    },
+    {
+      "id": "LIM-010",
+      "name": "Reintentos sin control (Retry Storm)",
+      "description": "Reintentos automáticos sin backoff exponencial ni límite de intentos sobre componentes degradados.",
+      "quality_attributes": ["resiliencia", "disponibilidad"],
+      "criticality": "alta",
+      "theme": "resiliencia",
+      "recommendation": "Configurar reintentos con backoff exponencial y jitter, límite de intentos y Circuit Breaker; derivar reprocesos a colas con DLQ.",
+      "effort": "bajo",
+      "kb_refs": ["kb/limits/v1/010-retry-storms.md", "kb/decisions/v1/001-asynchronous-communication.md"]
+    }
+  ]
+}

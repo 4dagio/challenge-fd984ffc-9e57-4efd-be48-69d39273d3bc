@@ -1,0 +1,59 @@
+{
+  "id": "A07",
+  "slug": "documentation-and-diagramming-standard",
+  "name": "Estándar de Documentación y Diagramación (C4 / Docs-as-Code)",
+  "kind": "checklist",
+  "scale": "boolean",
+  "is_gate": false,
+  "weight": 0.05,
+  "original_dimension": "Artefacto 1 — Arquitectura (comunicación del diseño)",
+  "source": "kb/references/v1/documentation-and-diagramming-standard.md",
+  "purpose": "Comprobar que la arquitectura está documentada de forma legible por humanos y por agentes de IA: modelo C4 con niveles bien delimitados, diagramas como código (Mermaid) y contratos formales versionados.",
+  "application": "Se revisan el SAD, los README de repositorios y los contratos publicados contra el checklist de verificación del estándar.",
+  "criteria": [
+    {
+      "id": "DOC-01",
+      "name": "Diagrama de contexto (C4 L1) sin detalles tecnológicos",
+      "description": "El nivel 1 mapea sistema, actores y sistemas externos con verbos claros, entre 10 y 15 elementos, sin tecnologías.",
+      "quality_attributes": ["mantenibilidad"],
+      "criticality": "baja",
+      "theme": "documentación",
+      "recommendation": "Mantener el diagrama de contexto actualizado con cada nuevo sistema externo integrado.",
+      "effort": "bajo",
+      "kb_refs": ["kb/references/v1/documentation-and-diagramming-standard.md"]
+    },
+    {
+      "id": "DOC-02",
+      "name": "Contenedores (C4 L2) con tecnología y protocolo",
+      "description": "Cada contenedor indica tecnología principal y protocolos, separa frontend, backend y persistencia, y es desplegable de forma independiente.",
+      "quality_attributes": ["mantenibilidad"],
+      "criticality": "baja",
+      "theme": "documentación",
+      "recommendation": "Completar la vista de contenedores con el broker, los jobs batch y los protocolos de cada relación.",
+      "effort": "bajo",
+      "kb_refs": ["kb/references/v1/documentation-and-diagramming-standard.md"]
+    },
+    {
+      "id": "DOC-03",
+      "name": "Diagramas como código (Mermaid en Markdown)",
+      "description": "Los diagramas viven junto al código en bloques Mermaid versionados, no como imágenes estáticas en herramientas externas.",
+      "quality_attributes": ["mantenibilidad"],
+      "criticality": "baja",
+      "theme": "documentación",
+      "recommendation": "Migrar los diagramas de draw.io a Mermaid dentro del repositorio de documentación y eliminar las copias desactualizadas.",
+      "effort": "bajo",
+      "kb_refs": ["kb/references/v1/documentation-and-diagramming-standard.md"]
+    },
+    {
+      "id": "DOC-04",
+      "name": "Contratos OpenAPI / AsyncAPI versionados (SemVer)",
+      "description": "Servicios REST con OpenAPI y mensajería con AsyncAPI, versionados semánticamente y diseñados API-First.",
+      "quality_attributes": ["interoperabilidad"],
+      "criticality": "media",
+      "theme": "contratos e integración",
+      "recommendation": "Publicar especificaciones AsyncAPI para los tópicos de órdenes, precios y valoración, versionadas con SemVer.",
+      "effort": "bajo",
+      "kb_refs": ["kb/references/v1/documentation-and-diagramming-standard.md", "kb/decisions/v1/005-communication-protocols-standard.md"]
+    }
+  ]
+}

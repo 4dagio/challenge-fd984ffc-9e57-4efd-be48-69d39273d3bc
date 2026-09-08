@@ -1,0 +1,113 @@
+{
+  "id": "investcore-portfolio",
+  "name": "InvestCore — Plataforma de Gestión de Portafolio de Inversiones",
+  "client": "Fiduciaria Andina (caso de estudio)",
+  "domain": "Gestión de portafolios de inversión: administración de portafolios, ejecución de órdenes, valoración, riesgo y cumplimiento, y reportería a clientes",
+  "version": "2026.08 (release 14)",
+  "description": "InvestCore administra 250.000 portafolios de personas naturales y fondos de inversión colectiva. Expone canales web y móvil para inversionistas y asesores, ejecuta órdenes contra brokers y custodios, valora los portafolios con precios de mercado en tiempo real y al cierre, controla límites de riesgo y genera extractos regulatorios. Está construida como siete microservicios Java (Spring Boot, arquitectura hexagonal en la mayoría) sobre AWS EKS, con Kafka (MSK) para eventos, PostgreSQL, MongoDB y Redis como persistencia, y una capa anticorrupción hacia el core contable heredado.",
+  "quality_priorities": ["seguridad", "disponibilidad", "rendimiento", "escalabilidad", "cumplimiento", "mantenibilidad"],
+  "context": {
+    "actors": [
+      {"id": "INV", "name": "Inversionista", "relation": "consulta portafolio y ordena"},
+      {"id": "ASE", "name": "Asesor financiero", "relation": "gestiona portafolios de clientes"},
+      {"id": "OPS", "name": "Mesa de operaciones", "relation": "supervisa ejecución y valoración"},
+      {"id": "CUM", "name": "Oficial de cumplimiento", "relation": "audita órdenes y límites"}
+    ],
+    "external_systems": [
+      {"id": "MKT", "name": "Proveedor de datos de mercado", "relation": "consume precios en tiempo real"},
+      {"id": "BRK", "name": "Broker / Bolsa (FIX)", "relation": "envía órdenes y recibe ejecuciones"},
+      {"id": "CUS", "name": "Custodio de valores", "relation": "concilia posiciones"},
+      {"id": "CORE", "name": "Core contable heredado", "relation": "registra movimientos vía ACL"},
+      {"id": "REG", "name": "Regulador", "relation": "reporta operaciones"}
+    ],
+    "containers": [
+      {"name": "Web App (asesores) y App móvil (inversionistas)", "technology": "React / Flutter", "responsibility": "Canales de consulta, órdenes y reportes"},
+      {"name": "API Gateway + BFF", "technology": "AWS API Gateway, Spring Cloud Gateway", "responsibility": "Autenticación (Cognito, MFA), enrutamiento, rate limiting parcial"},
+      {"name": "portfolio-service", "technology": "Java 21 / Spring Boot, PostgreSQL", "responsibility": "Agregado Portafolio y Posiciones"},
+      {"name": "order-service", "technology": "Java 21 / Spring Boot, PostgreSQL (event store)", "responsibility": "Ciclo de vida de órdenes, integración FIX con broker"},
+      {"name": "pricing-service", "technology": "Java 21 / Spring WebFlux, Redis", "responsibility": "Ingesta de precios y caché de último precio"},
+      {"name": "valuation-service + valuation-batch", "technology": "Java 21 / Spring Boot, Kafka consumer, PostgreSQL", "responsibility": "Valoración en línea y de fin de día"},
+      {"name": "risk-compliance-service", "technology": "Java 21 / Spring Boot, MongoDB", "responsibility": "Límites, perfil de riesgo, alertas de cumplimiento"},
+      {"name": "reporting-service", "technology": "Java 21 / Spring Boot, PostgreSQL (esquema compartido con portfolio)", "responsibility": "Extractos y reportes regulatorios"},
+      {"name": "customer-service", "technology": "Java 21 / Spring Boot, PostgreSQL", "responsibility": "Datos de cliente y perfilamiento"},
+      {"name": "Kafka (MSK)", "technology": "Apache Kafka", "responsibility": "Eventos de órdenes, precios y valoración"},
+      {"name": "legacy-acl", "technology": "Java / Spring Boot", "responsibility": "Capa anticorrupción hacia el core contable"}
+    ]
+  },
+  "local_decisions": [
+    {"id": "ADR-INV-01", "title": "Microservicios por Bounded Context sobre EKS", "status": "Aprobado"},
+    {"id": "ADR-INV-03", "title": "Kafka como bus de eventos de órdenes y valoración", "status": "Aprobado"},
+    {"id": "ADR-INV-05", "title": "Redis cache-aside para último precio (TTL 2 s)", "status": "Aprobado"},
+    {"id": "ADR-INV-07", "title": "Batch de valoración en EKS (Job) en lugar de Serverless por duración > 15 min y warm-up JVM", "status": "Aprobado"},
+    {"id": "ADR-INV-09", "title": "Esquema compartido portfolio/reporting como medida temporal", "status": "Propuesto (sin aprobar, sin fecha de salida)"}
+  ],
+  "assessment_inputs": {
+    "VAL-01": {"level": 2, "evidence": "La última incorporación de un instrumento (nota estructurada) tocó 4 servicios y tomó 18 días-persona; existe abstracción 'Instrument' pero la valoración por tipo está codificada con condicionales en valuation-service.", "source": "Historial de PRs Q2-2026; entrevista con líder técnico"},
+    "VAL-02": {"level": 1, "evidence": "Los contextos están separados en servicios, pero reporting-service lee directamente las tablas de portfolio-service y risk-compliance consulta customer-service de forma síncrona en cada evaluación.", "source": "Diagrama de despliegue; revisión de repositorios (datasource compartido en reporting-service/application.yml)"},
+    "VAL-03": {"level": 3, "evidence": "Inventario de componentes justificado; se detectó un servicio 'notification-orchestrator' sin uso desde 2025 que ya está marcado para retiro.", "source": "SAD sección 4; backlog INV-1187"},
+    "VAL-04": {"level": 2, "evidence": "5 de 7 servicios siguen el arquetipo hexagonal del Chapter; reporting-service y legacy-acl mezclan lógica de negocio en controladores y repositorios JPA.", "source": "Revisión estática de estructura de paquetes"},
+    "VAL-05": {"level": 2, "evidence": "Existen métricas RED en Grafana y un objetivo informal de p95 < 2 s; no hay SLOs formales ni presupuesto de error por capacidad de negocio.", "source": "Tableros Grafana 'investcore-services'; entrevista SRE"},
+    "VAL-06": {"level": 3, "evidence": "Glosario ubicuo publicado (Portafolio, Posición, Orden, Ejecución, Valoración, Instrumento); los eventos Kafka y las APIs usan esos términos. Falta cubrir el contexto de cumplimiento.", "source": "docs/glosario.md; esquemas de eventos"},
+    "VAL-07": {"level": 2, "evidence": "Existen 5 ADRs locales con plantilla propia (sin sección de trade-offs económicos); decisiones como la ausencia de mesh o el esquema compartido no tienen ADR aprobado. El SAD está desactualizado (v2025.11).", "source": "Repositorio investcore-docs/adr"},
+    "VAL-08": {"level": 2, "evidence": "La deuda técnica está inventariada en una página de Confluence (23 ítems) sin estimación de impacto ni capacidad reservada; no se miden métricas DORA completas.", "source": "Confluence 'Deuda técnica InvestCore'; Jira"},
+
+    "WF-01": {"status": "partial", "evidence": "Se realizó Event Storming en 2024 para portafolio, órdenes y valoración; los contextos de riesgo/cumplimiento y cliente se modelaron sin taller y sin mapa de capacidades actualizado.", "source": "Miro 'Event Storming InvestCore 2024'; SAD sección 2"},
+    "WF-02": {"status": "partial", "evidence": "Los requisitos no funcionales existen como lista textual ('alta disponibilidad', 'respuesta rápida') sin escenarios estímulo-respuesta ni SLOs formales; los escenarios de este assessment se construyeron durante la evaluación.", "source": "SAD sección 3 'Requisitos no funcionales'"},
+    "WF-03": {"status": "partial", "evidence": "Hay ADRs para estilo (microservicios), eventos (Kafka), caché y despliegue del batch; no hay ADR para persistencia por servicio, seguridad interna ni observabilidad.", "source": "investcore-docs/adr"},
+    "WF-04": {"status": "partial", "evidence": "Vistas C4 L1 y L2 existentes; sin vista de componentes para valuation-service y order-service. Contratos OpenAPI definidos antes de implementar; los eventos Kafka no tienen contrato formal.", "source": "SAD secciones 5-6; catálogo de APIs"},
+    "WF-05": {"status": "partial", "evidence": "IaC con Terraform para EKS, RDS y MSK; Redis y reglas de WAF configurados manualmente. El pipeline ejecuta SonarQube pero el quality gate no bloquea el despliegue.", "source": "Repositorio investcore-infra; definición del pipeline GitLab CI"},
+    "WF-06": {"status": "fail", "evidence": "No existen fitness functions (sin ArchUnit ni reglas de dependencia automatizadas); la deuda no se gestiona en sprints.", "source": "Búsqueda en repositorios (0 dependencias ArchUnit); entrevista con el equipo"},
+
+    "QAS-01": {"measured": 2650, "evidence": "Prueba K6 con 4.500 VUs: p95 = 2.650 ms y 0,8% de errores; la valoración se calcula en línea llamando a pricing-service por cada posición.", "source": "Reporte K6 2026-08-12 'consulta-portafolio-4500vu'"},
+    "QAS-02": {"measured": 41, "evidence": "La valoración de fin de día tomó 41 minutos en promedio en agosto (máximo 53 min el 29/08), con un solo consumidor por partición y 6 particiones.", "source": "Métricas del job valuation-batch (CloudWatch) agosto 2026"},
+    "QAS-03": {"measured": 99.87, "evidence": "Disponibilidad de 99,87% en los últimos 3 meses; dos incidentes mayores: caída del proveedor de precios (90 min degradados) y OOM del batch que afectó a la API de valoración.", "source": "Reporte mensual de disponibilidad; postmortems INC-2026-071 e INC-2026-088"},
+    "QAS-04": {"measured": 14000, "evidence": "En la prueba de ingesta el lag del tópico 'market.prices' crece a partir de 14.000 ticks/s; el consumidor no aplica backpressure y los reintentos del adaptador de ingesta son inmediatos.", "source": "Prueba de carga de pricing-service 2026-08-14; métricas de lag MSK"},
+    "QAS-05": {"measured": 90, "evidence": "Durante INC-2026-071 el proveedor de precios respondió con latencia > 30 s; pricing-service no tiene timeout ni circuit breaker y los clientes recibieron 504 durante 90 s hasta la intervención manual (solo el BFF tiene Resilience4j).", "source": "Postmortem INC-2026-071; código pricing-service/MarketDataClient.java"},
+    "QAS-06": {"measured": 96, "evidence": "48 de 50 endpoints que exponen datos de portafolio o cliente aplican autorización; 2 endpoints internos de reporting-service (/internal/positions, /internal/statements) solo validan red y no identidad.", "source": "Prueba de seguridad DAST 2026-07 (OWASP ZAP) y revisión de filtros de seguridad"},
+    "QAS-07": {"measured": 45, "evidence": "Snapshots de RDS cada hora (RPO efectivo 60 min) y runbook manual de conmutación ejecutado en 45 min en el ejercicio de DR de junio 2026.", "source": "Ejercicio DR 2026-06-21; plan de continuidad"},
+    "QAS-08": {"measured": 18, "evidence": "La incorporación de notas estructuradas tomó 18 días-persona y modificó 4 servicios (valuation, portfolio, reporting, order).", "source": "Épica INV-980; historial de PRs"},
+    "QAS-09": {"measured": 100, "evidence": "order-service usa event sourcing; la reconstrucción de cualquier orden se obtiene en segundos desde el event store y se validó con 200 órdenes de muestra.", "source": "Prueba de auditoría con cumplimiento 2026-08-05"},
+
+    "DOD-01": {"status": "fail", "evidence": "Sin pruebas de arquitectura automatizadas; la regla de dependencias hexagonal se verifica solo en code review.", "source": "Repositorios (sin ArchUnit); pipeline"},
+    "DOD-02": {"status": "partial", "evidence": "Cobertura global 62% (valuation-service 48%, order-service 81%, reporting-service 39%); el umbral no bloquea el pipeline.", "source": "SonarQube 2026-08-30"},
+    "DOD-03": {"status": "fail", "evidence": "API key del proveedor de datos de mercado y credenciales SMTP en application.yml versionado en pricing-service y reporting-service; el resto de secretos está en AWS Secrets Manager. No hay escaneo de secretos en el pipeline.", "source": "Revisión de repositorios; historial git"},
+    "DOD-04": {"status": "partial", "evidence": "SonarQube reporta 3 vulnerabilidades altas abiertas (dependencias) y el gate no es bloqueante; no se escanean imágenes (Trivy) ni IaC (Checkov).", "source": "SonarQube; pipeline GitLab CI"},
+    "DOD-05": {"status": "partial", "evidence": "Se mide Deployment Frequency (3/semana) y Lead Time; MTTR y Change Failure Rate no se capturan.", "source": "Tablero de ingeniería"},
+    "DOD-06": {"status": "partial", "evidence": "Circuit Breaker y timeouts solo en el BFF; los clientes hacia datos de mercado, custodio y core no tienen timeout explícito. Pruebas K6 existen pero se ejecutan manualmente.", "source": "Código de clientes HTTP; pipeline"},
+    "DOD-07": {"status": "fail", "evidence": "La deuda se registra en Confluence, fuera del backlog, sin impacto económico ni interés.", "source": "Confluence; Jira (0 ítems etiquetados como deuda técnica)"},
+    "DOD-08": {"status": "partial", "evidence": "4 de 7 servicios emiten logs JSON con traceId; valuation-batch y reporting-service emiten texto plano; health checks presentes en todos.", "source": "Muestras de logs CloudWatch; configuración logback"},
+    "DOD-09": {"status": "pass", "evidence": "Revisión obligatoria por par configurada en GitLab con al menos una aprobación; se usa asistente IA para revisión previa.", "source": "Configuración de merge requests"},
+    "DOD-10": {"status": "partial", "evidence": "APIs versionadas (/v1) con pruebas de contrato Pact entre BFF y servicios; el Swagger publicado de reporting-service y customer-service no coincide con el código (drift detectado en 6 endpoints).", "source": "Catálogo de APIs; comparación OpenAPI vs código"},
+
+    "LIM-001": {"status": "violated", "evidence": "pricing-service invoca al proveedor de precios sin timeout ni circuit breaker; el incidente INC-2026-071 produjo 504 en cascada hacia portfolio-service y el BFF.", "source": "Postmortem INC-2026-071; MarketDataClient.java"},
+    "LIM-002": {"status": "violated", "evidence": "reporting-service lee las tablas 'positions' y 'portfolios' del esquema de portfolio-service; una migración de columna en julio rompió la generación de extractos.", "source": "application.yml de reporting-service; INC-2026-079"},
+    "LIM-003": {"status": "compliant", "evidence": "Pruebas de contrato Pact en CI; clientes aplican Tolerant Reader; sin breaking changes en los últimos 6 meses.", "source": "Pact Broker; historial de versiones de API"},
+    "LIM-004": {"status": "at-risk", "evidence": "5 de 7 despliegues definen requests/limits; valuation-batch y legacy-acl no los definen y el batch fue OOMKilled el 29/08 afectando el nodo. No hay alertas de anomalía de costos.", "source": "Manifiestos Helm; eventos de Kubernetes INC-2026-088"},
+    "LIM-005": {"status": "at-risk", "evidence": "HikariCP con tamaño por defecto (10) en valuation-service; en el cierre de mercado se observan esperas de conexión > 5 s y advertencias 'connection is not available'.", "source": "Métricas Hikari en Grafana; logs valuation-service"},
+    "LIM-006": {"status": "violated", "evidence": "API key del proveedor de datos de mercado y credenciales SMTP versionadas en application.yml; el historial del repositorio conserva una contraseña de base de datos rotada en 2025.", "source": "Revisión de repositorios y de historial git"},
+    "LIM-007": {"status": "at-risk", "evidence": "TLS termina en el ingress; el tráfico interno entre pods es HTTP plano. Existen NetworkPolicies por namespace pero no autenticación mutua ni identidad de servicio.", "source": "Configuración de ingress y NetworkPolicies; entrevista con plataforma"},
+    "LIM-008": {"status": "violated", "evidence": "El consumidor de valoración procesa sin control de lag ni límite de concurrencia; en la apertura del 29/08 la cola creció hasta agotar memoria (OOM). No hay respuestas 429 en las APIs internas.", "source": "Métricas de lag MSK; INC-2026-088"},
+    "LIM-009": {"status": "at-risk", "evidence": "Logs centralizados en CloudWatch, pero valuation-batch y reporting-service emiten texto plano sin traceId, lo que impidió correlacionar el incidente INC-2026-088 en menos de 2 horas.", "source": "Postmortem INC-2026-088; configuración de logging"},
+    "LIM-010": {"status": "violated", "evidence": "El adaptador de ingesta de precios reintenta 3 veces de forma inmediata y sin backoff ante error del proveedor; durante INC-2026-071 el tráfico hacia el proveedor se triplicó.", "source": "MarketDataIngestAdapter.java; métricas de egress durante el incidente"},
+
+    "ADR-001": {"status": "aligned", "evidence": "Órdenes, ejecuciones, precios y valoraciones se integran por eventos Kafka; las llamadas síncronas se limitan a consultas que requieren respuesta inmediata.", "source": "ADR-INV-03; topología de tópicos"},
+    "ADR-002": {"status": "unjustified-deviation", "evidence": "El esquema compartido entre portfolio-service y reporting-service contradice Database-per-service; el ADR-INV-09 que lo justifica como temporal está sin aprobar y sin fecha de salida.", "source": "ADR-INV-09; configuración de datasources"},
+    "ADR-003": {"status": "unjustified-deviation", "evidence": "Siete microservicios críticos financieros sin service mesh ni alternativa de mTLS; no existe ADR local que documente la decisión de no adoptarlo.", "source": "Plataforma EKS; repositorio de ADRs"},
+    "ADR-004": {"status": "aligned", "evidence": "Redis cache-aside para último precio con TTL 2 s, documentado en ADR-INV-05 con análisis de datos obsoletos.", "source": "ADR-INV-05; pricing-service"},
+    "ADR-005": {"status": "aligned", "evidence": "REST para BFF y APIs públicas, gRPC entre pricing-service y valuation-service, eventos para workflows.", "source": "Catálogo de APIs; protos"},
+    "ADR-006": {"status": "partial", "evidence": "PostgreSQL para portafolio y órdenes, MongoDB para riesgo/cumplimiento y Redis para precios, alineado con la estrategia políglota; sin embargo el aislamiento por contexto se rompe en reporting-service.", "source": "Diagrama de despliegue"},
+    "ADR-007": {"status": "unjustified-deviation", "evidence": "Uso mixto: la mayoría de secretos en Secrets Manager pero credenciales críticas en archivos versionados; sin rotación automática.", "source": "Revisión de configuración"},
+    "ADR-008": {"status": "justified-deviation", "evidence": "El batch de valoración (carga intermitente) corre en EKS y no en Serverless; el ADR-INV-07 justifica la desviación por duración > 15 min y warm-up de JVM, con trade-offs documentados.", "source": "ADR-INV-07"},
+    "ADR-009": {"status": "partial", "evidence": "OpenTelemetry y logs JSON en 4 de 7 servicios; el batch y reporting-service quedan fuera de la trazabilidad distribuida.", "source": "Configuración de instrumentación; tableros"},
+
+    "DOC-01": {"status": "pass", "evidence": "Diagrama de contexto con 4 actores y 5 sistemas externos, sin tecnologías, verbos claros.", "source": "SAD sección 5.1"},
+    "DOC-02": {"status": "partial", "evidence": "La vista de contenedores indica tecnologías pero omite el broker Kafka, el job batch y los protocolos de varias relaciones.", "source": "SAD sección 5.2"},
+    "DOC-03": {"status": "fail", "evidence": "Los diagramas están en draw.io exportados a PNG en Confluence; existen tres versiones distintas del diagrama de contenedores.", "source": "Confluence InvestCore/Arquitectura"},
+    "DOC-04": {"status": "partial", "evidence": "OpenAPI 3.0 versionado para todas las APIs REST; los 9 tópicos Kafka no tienen especificación AsyncAPI y los esquemas Avro no siguen SemVer.", "source": "Catálogo de APIs; Schema Registry"},
+
+    "OBS-01": {"status": "partial", "evidence": "El traceId se propaga desde el BFF por los servicios REST y gRPC, pero se pierde en las cabeceras Kafka y no existe en valuation-batch.", "source": "Trazas X-Ray de muestra; configuración de productores Kafka"},
+    "OBS-02": {"status": "partial", "evidence": "Logs centralizados en CloudWatch; 4 de 7 servicios en JSON. reporting-service registra número de cuenta y documento de identidad del cliente en texto plano al generar extractos.", "source": "Muestras de logs de reporting-service 2026-08"},
+    "OBS-03": {"status": "partial", "evidence": "Métricas RED por servicio y USE de nodos en Grafana; no hay KPIs de negocio (portafolios valorados por minuto, órdenes ejecutadas, valor administrado).", "source": "Tableros Grafana"},
+    "OBS-04": {"status": "fail", "evidence": "Alertas basadas en umbrales estáticos sin detección de anomalías; sin AWS Budgets ni alertas de costo; las alertas llegan a Slack sin throttling ni integración con tickets.", "source": "Reglas de alertas CloudWatch; entrevista SRE"}
+  }
+}
